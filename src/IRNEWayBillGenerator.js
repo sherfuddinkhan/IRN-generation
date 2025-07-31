@@ -1,0 +1,904 @@
+import React, { useState, useCallback } from 'react';
+import {
+  Container,
+  TextField,
+  Button,
+  Box,
+  Typography,
+  Paper,
+  Divider,
+  Alert,
+  CircularProgress,
+  Grid,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
+import CryptoJS from 'crypto-js';
+import { Buffer } from 'buffer';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
+if (typeof window !== 'undefined' && !window.Buffer) {
+  window.Buffer = Buffer;
+}
+
+const IRNEWayBillGenerator = () => {
+  // Transaction Details (TranDtls)
+  const [taxSch, setTaxSch] = useState('GST');
+  const [supTyp, setSupTyp] = useState('B2B');
+  const [regRev, setRegRev] = useState('Y');
+  const [ecmGstin, setEcmGstin] = useState(null);
+  const [igstOnIntra, setIgstOnIntra] = useState('N');
+
+  // Document Details (DocDtls)
+  const [docTyp, setDocTyp] = useState('INV');
+  const [docNo, setDocNo] = useState('DOC/002989888');
+  const [docDt, setDocDt] = useState('31/07/2025');
+
+  // Seller Details (SellerDtls)
+  const [sellerGstin, setSellerGstin] = useState('36AALCC6633K004');
+  const [sellerLglNm, setSellerLglNm] = useState('NIC company pvt ltd');
+  const [sellerTrdNm, setSellerTrdNm] = useState('NIC Industries');
+  const [sellerAddr1, setSellerAddr1] = useState('5th block, kuvempu layout');
+  const [sellerAddr2, setSellerAddr2] = useState('kuvempu layout');
+  const [sellerLoc, setSellerLoc] = useState('GANDHINAGAR');
+  const [sellerPin, setSellerPin] = useState('518001');
+  const [sellerStcd, setSellerStcd] = useState('36');
+  const [sellerPh, setSellerPh] = useState('9000000000');
+  const [sellerEm, setSellerEm] = useState('abc@gmail.com');
+
+  // Buyer Details (BuyerDtls)
+  const [buyerGstin, setBuyerGstin] = useState('36AALCC6633K004');
+  const [buyerLglNm, setBuyerLglNm] = useState('XYZ company pvt ltd');
+  const [buyerTrdNm, setBuyerTrdNm] = useState('XYZ Industries');
+  const [buyerPos, setBuyerPos] = useState('12');
+  const [buyerAddr1, setBuyerAddr1] = useState('7th block, kuvempu layout');
+  const [buyerAddr2, setBuyerAddr2] = useState('kuvempu layout');
+  const [buyerLoc, setBuyerLoc] = useState('GANDHINAGAR');
+  const [buyerPin, setBuyerPin] = useState('562160');
+  const [buyerStcd, setBuyerStcd] = useState('36');
+  const [buyerPh, setBuyerPh] = useState('9959728586');
+  const [buyerEm, setBuyerEm] = useState('xyz@yahoo.com');
+
+  // Dispatch Details (DispDtls)
+  const [dispNm, setDispNm] = useState('ABC company pvt ltd');
+  const [dispAddr1, setDispAddr1] = useState('7th block, kuvempu layout');
+  const [dispAddr2, setDispAddr2] = useState('kuvempu layout');
+  const [dispLoc, setDispLoc] = useState('Banagalore');
+  const [dispPin, setDispPin] = useState('562160');
+  const [dispStcd, setDispStcd] = useState('36');
+
+  // Shipping Details (ShipDtls)
+  const [shipGstin, setShipGstin] = useState('29AWGPV7107B1Z1');
+  const [shipLglNm, setShipLglNm] = useState('CBE company pvt ltd');
+  const [shipTrdNm, setShipTrdNm] = useState('kuvempu layout');
+  const [shipAddr1, setShipAddr1] = useState('7th block, kuvempu layout');
+  const [shipAddr2, setShipAddr2] = useState('kuvempu layout');
+  const [shipLoc, setShipLoc] = useState('Banagalore');
+  const [shipPin, setShipPin] = useState('562160');
+  const [shipStcd, setShipStcd] = useState('29');
+
+  // Item List (ItemList - single item)
+  const [itemSlNo, setItemSlNo] = useState('1');
+  const [itemPrdDesc, setItemPrdDesc] = useState('Rice');
+  const [itemIsServc, setItemIsServc] = useState('N');
+  const [itemHsnCd, setItemHsnCd] = useState('1001');
+  const [itemBarcde, setItemBarcde] = useState('123456');
+  const [itemQty, setItemQty] = useState('100.345');
+  const [itemFreeQty, setItemFreeQty] = useState('10');
+  const [itemUnit, setItemUnit] = useState('BAG');
+  const [itemUnitPrice, setItemUnitPrice] = useState('99.55');
+  const [itemTotAmt, setItemTotAmt] = useState('9988.84');
+  const [itemDiscount, setItemDiscount] = useState('10');
+  const [itemPreTaxVal, setItemPreTaxVal] = useState('1');
+  const [itemAssAmt, setItemAssAmt] = useState('9978.84');
+  const [itemGstRt, setItemGstRt] = useState('12');
+  const [itemIgstAmt, setItemIgstAmt] = useState('1197.46');
+  const [itemCgstAmt, setItemCgstAmt] = useState('0');
+  const [itemSgstAmt, setItemSgstAmt] = useState('0');
+  const [itemCesRt, setItemCesRt] = useState('5');
+  const [itemCesAmt, setItemCesAmt] = useState('498.94');
+  const [itemCesNonAdvlAmt, setItemCesNonAdvlAmt] = useState('10');
+  const [itemStateCesRt, setItemStateCesRt] = useState('12');
+  const [itemStateCesAmt, setItemStateCesAmt] = useState('1197.46');
+  const [itemStateCesNonAdvlAmt, setItemStateCesNonAdvlAmt] = useState('5');
+  const [itemOthChrg, setItemOthChrg] = useState('10');
+  const [itemTotItemVal, setItemTotItemVal] = useState('12897.7');
+  const [itemOrdLineRef, setItemOrdLineRef] = useState('3256');
+  const [itemOrgCntry, setItemOrgCntry] = useState('IN');
+  const [itemPrdSlNo, setItemPrdSlNo] = useState('12345');
+  const [itemBchNm, setItemBchNm] = useState('123456');
+  const [itemBchExpDt, setItemBchExpDt] = useState('31/07/2025');
+  const [itemBchWrDt, setItemBchWrDt] = useState('31/07/2025');
+  const [itemAttribNm, setItemAttribNm] = useState('Rice');
+  const [itemAttribVal, setItemAttribVal] = useState('10000');
+
+  // Value Details (ValDtls)
+  const [valAssVal, setValAssVal] = useState('9978.84');
+  const [valCgstVal, setValCgstVal] = useState('0');
+  const [valSgstVal, setValSgstVal] = useState('0');
+  const [valIgstVal, setValIgstVal] = useState('1197.46');
+  const [valCesVal, setValCesVal] = useState('508.94');
+  const [valStCesVal, setValStCesVal] = useState('1202.46');
+  const [valDiscount, setValDiscount] = useState('10');
+  const [valOthChrg, setValOthChrg] = useState('20');
+  const [valRndOffAmt, setValRndOffAmt] = useState('0.3');
+  const [valTotInvVal, setValTotInvVal] = useState('12908');
+  const [valTotInvValFc, setValTotInvValFc] = useState('12897.7');
+
+  // Payment Details (PayDtls)
+  const [payNm, setPayNm] = useState('ABCDE');
+  const [payAccDet, setPayAccDet] = useState('5697389713210');
+  const [payMode, setPayMode] = useState('Cash');
+  const [payFinInsBr, setPayFinInsBr] = useState('SBIN11000');
+  const [payPayTerm, setPayPayTerm] = useState('100');
+  const [payPayInstr, setPayPayInstr] = useState('Gift');
+  const [payCrTrn, setPayCrTrn] = useState('test');
+  const [payDirDr, setPayDirDr] = useState('test');
+  const [payCrDay, setPayCrDay] = useState('100');
+  const [payPaidAmt, setPayPaidAmt] = useState('10000');
+  const [payPaymtDue, setPayPaymtDue] = useState('5000');
+
+  // Reference Details (RefDtls)
+  const [invRm, setInvRm] = useState('TEST');
+  const [docPerdInvStDt, setDocPerdInvStDt] = useState('31/07/2025');
+  const [docPerdInvEndDt, setDocPerdInvEndDt] = useState('31/07/2025');
+  const [precDocInvNo, setPrecDocInvNo] = useState('DOC/002989888');
+  const [precDocInvDt, setPrecDocInvDt] = useState('31/07/2025');
+  const [precDocOthRefNo, setPrecDocOthRefNo] = useState('123456');
+  const [contrRecAdvRefr, setContrRecAdvRefr] = useState('Doc/003');
+  const [contrRecAdvDt, setContrRecAdvDt] = useState('31/07/2025');
+  const [contrTendRefr, setContrTendRefr] = useState('Abc001');
+  const [contrContrRefr, setContrContrRefr] = useState('Co123');
+  const [contrExtRefr, setContrExtRefr] = useState('Yo456');
+  const [contrProjRefr, setContrProjRefr] = useState('Doc-456');
+  const [contrPORefr, setContrPORefr] = useState('Doc-7897887744');
+  const [contrPORefDt, setContrPORefDt] = useState('31/07/2025');
+
+  // Additional Document Details (AddlDocDtls)
+  const [addlDocUrl, setAddlDocUrl] = useState('');
+  const [addlDocDocs, setAddlDocDocs] = useState('');
+  const [addlDocInfo, setAddlDocInfo] = useState('');
+
+  // Export Details (ExpDtls)
+  const [expShipBNo, setExpShipBNo] = useState('');
+  const [expShipBDt, setExpShipBDt] = useState('');
+  const [expPort, setExpPort] = useState('');
+  const [expRefClm, setExpRefClm] = useState('');
+  const [expForCur, setExpForCur] = useState('');
+  const [expCntCode, setExpCntCode] = useState('');
+  const [expExpDuty, setExpExpDuty] = useState(null);
+
+  // E-Way Bill Details (EwbDtls)
+  const [transId, setTransId] = useState('12AWGPV7107B1Z1');
+  const [transName, setTransName] = useState('XYZ EXPORTS');
+  const [distance, setDistance] = useState('100');
+  const [transDocNo, setTransDocNo] = useState('DOC01');
+  const [transDocDt, setTransDocDt] = useState('31/07/2025');
+  const [vehNo, setVehNo] = useState('ka123456666');
+  const [vehType, setVehType] = useState('R');
+  const [transMode, setTransMode] = useState('1');
+
+  // IRN/E-Way Bill Intermediate and Response States
+  const [irnEwbRawPayload, setIrnEwbRawPayload] = useState('');
+  const [irnEwbBase64EncodedPayload, setIrnEwbBase64EncodedPayload] = useState('');
+  const [irnEwbEncryptedPayload, setIrnEwbEncryptedPayload] = useState('');
+  const [irnEwbLoading, setIrnEwbLoading] = useState(false);
+  const [irnEwbError, setIrnEwbError] = useState(null);
+  const [irnEwbApiResponse, setIrnEwbApiResponse] = useState(null);
+  const [authToken, setAuthToken] = useState('');
+  const [decryptedSek, setDecryptedSek] = useState('');
+  const [clientId, setClientId] = useState('UFf6Ra1Iy5CcsjuKNE1n3KBjIWSpOUdH');
+  const [clientSecret, setClientSecret] = useState('w3Hl7rf64Es2CxG+zyEAaXxHvjmkVnrB');
+  const [gstin, setGstin] = useState('36AALCC6633K004');
+  const [username, setUsername] = useState('');
+
+  const constructIRNEwbPayload = useCallback(() => {
+    if (!taxSch || !supTyp || !regRev || !igstOnIntra || !docTyp || !docNo || !docDt ||
+        !sellerGstin || !sellerLglNm || !sellerAddr1 || !sellerLoc || !sellerPin || !sellerStcd ||
+        !buyerGstin || !buyerLglNm || !buyerPos || !buyerAddr1 || !buyerLoc || !buyerPin || !buyerStcd ||
+        !dispNm || !dispAddr1 || !dispLoc || !dispPin || !dispStcd ||
+        !shipGstin || !shipLglNm || !shipAddr1 || !shipLoc || !shipPin || !shipStcd ||
+        !itemPrdDesc || !itemHsnCd || !itemQty || !itemUnit || !itemUnitPrice || !itemTotAmt ||
+        !valAssVal || !valTotInvVal || !transId || !transName || !distance || !transDocNo || !transDocDt || !vehNo || !vehType || !transMode) {
+      setIrnEwbError('Please fill all required E-Way Bill details in Phase 2.');
+      return;
+    }
+    try {
+      const payload = {
+        Version: "1.1",
+        TranDtls: {
+          TaxSch: taxSch,
+          SupTyp: supTyp,
+          RegRev: regRev,
+          EcmGstin: ecmGstin,
+          IgstOnIntra: igstOnIntra
+        },
+        DocDtls: {
+          Typ: docTyp,
+          No: docNo,
+          Dt: docDt
+        },
+        SellerDtls: {
+          Gstin: sellerGstin,
+          LglNm: sellerLglNm,
+          TrdNm: sellerTrdNm,
+          Addr1: sellerAddr1,
+          Addr2: sellerAddr2,
+          Loc: sellerLoc,
+          Pin: parseInt(sellerPin),
+          Stcd: sellerStcd,
+          Ph: sellerPh,
+          Em: sellerEm
+        },
+        BuyerDtls: {
+          Gstin: buyerGstin,
+          LglNm: buyerLglNm,
+          TrdNm: buyerTrdNm,
+          Pos: buyerPos,
+          Addr1: buyerAddr1,
+          Addr2: buyerAddr2,
+          Loc: buyerLoc,
+          Pin: parseInt(buyerPin),
+          Stcd: buyerStcd,
+          Ph: buyerPh,
+          Em: buyerEm
+        },
+        DispDtls: {
+          Nm: dispNm,
+          Addr1: dispAddr1,
+          Addr2: dispAddr2,
+          Loc: dispLoc,
+          Pin: parseInt(dispPin),
+          Stcd: dispStcd
+        },
+        ShipDtls: {
+          Gstin: shipGstin,
+          LglNm: shipLglNm,
+          TrdNm: shipTrdNm,
+          Addr1: shipAddr1,
+          Addr2: shipAddr2,
+          Loc: shipLoc,
+          Pin: parseInt(shipPin),
+          Stcd: shipStcd
+        },
+        ItemList: [{
+          SlNo: itemSlNo,
+          PrdDesc: itemPrdDesc,
+          IsServc: itemIsServc,
+          HsnCd: itemHsnCd,
+          Barcde: itemBarcde,
+          Qty: parseFloat(itemQty),
+          FreeQty: parseFloat(itemFreeQty),
+          Unit: itemUnit,
+          UnitPrice: parseFloat(itemUnitPrice),
+          TotAmt: parseFloat(itemTotAmt),
+          Discount: parseFloat(itemDiscount),
+          PreTaxVal: parseFloat(itemPreTaxVal),
+          AssAmt: parseFloat(itemAssAmt),
+          GstRt: parseFloat(itemGstRt),
+          IgstAmt: parseFloat(itemIgstAmt),
+          CgstAmt: parseFloat(itemCgstAmt),
+          SgstAmt: parseFloat(itemSgstAmt),
+          CesRt: parseFloat(itemCesRt),
+          CesAmt: parseFloat(itemCesAmt),
+          CesNonAdvlAmt: parseFloat(itemCesNonAdvlAmt),
+          StateCesRt: parseFloat(itemStateCesRt),
+          StateCesAmt: parseFloat(itemStateCesAmt),
+          StateCesNonAdvlAmt: parseFloat(itemStateCesNonAdvlAmt),
+          OthChrg: parseFloat(itemOthChrg),
+          TotItemVal: parseFloat(itemTotItemVal),
+          OrdLineRef: itemOrdLineRef,
+          OrgCntry: itemOrgCntry,
+          PrdSlNo: itemPrdSlNo,
+          BchDtls: {
+            Nm: itemBchNm,
+            ExpDt: itemBchExpDt,
+            WrDt: itemBchWrDt
+          },
+          AttribDtls: [{
+            Nm: itemAttribNm,
+            Val: itemAttribVal
+          }]
+        }],
+        ValDtls: {
+          AssVal: parseFloat(valAssVal),
+          CgstVal: parseFloat(valCgstVal),
+          SgstVal: parseFloat(valSgstVal),
+          IgstVal: parseFloat(valIgstVal),
+          CesVal: parseFloat(valCesVal),
+          StCesVal: parseFloat(valStCesVal),
+          Discount: parseFloat(valDiscount),
+          OthChrg: parseFloat(valOthChrg),
+          RndOffAmt: parseFloat(valRndOffAmt),
+          TotInvVal: parseFloat(valTotInvVal),
+          TotInvValFc: parseFloat(valTotInvValFc)
+        },
+        PayDtls: {
+          Nm: payNm,
+          AccDet: payAccDet,
+          Mode: payMode,
+          FinInsBr: payFinInsBr,
+          PayTerm: payPayTerm,
+          PayInstr: payPayInstr,
+          CrTrn: payCrTrn,
+          DirDr: payDirDr,
+          CrDay: parseInt(payCrDay),
+          PaidAmt: parseFloat(payPaidAmt),
+          PaymtDue: parseFloat(payPaymtDue)
+        },
+        RefDtls: {
+          InvRm: invRm,
+          DocPerdDtls: {
+            InvStDt: docPerdInvStDt,
+            InvEndDt: docPerdInvEndDt
+          },
+          PrecDocDtls: [{
+            InvNo: precDocInvNo,
+            InvDt: precDocInvDt,
+            OthRefNo: precDocOthRefNo
+          }],
+          ContrDtls: [{
+            RecAdvRefr: contrRecAdvRefr,
+            RecAdvDt: contrRecAdvDt,
+            TendRefr: contrTendRefr,
+            ContrRefr: contrContrRefr,
+            ExtRefr: contrExtRefr,
+            ProjRefr: contrProjRefr,
+            PORefr: contrPORefr,
+            PORefDt: contrPORefDt
+          }]
+        },
+        AddlDocDtls: [{
+          Url: addlDocUrl,
+          Docs: addlDocDocs,
+          Info: addlDocInfo
+        }],
+        ExpDtls: {
+          ShipBNo: expShipBNo,
+          ShipBDt: expShipBDt,
+          Port: expPort,
+          RefClm: expRefClm,
+          ForCur: expForCur,
+          CntCode: expCntCode,
+          ExpDuty: expExpDuty
+        },
+        EwbDtls: {
+          TransId: transId,
+          TransName: transName,
+          Distance: parseInt(distance),
+          TransDocNo: transDocNo,
+          TransDocDt: transDocDt,
+          VehNo: vehNo,
+          VehType: vehType,
+          TransMode: transMode
+        }
+      };
+      const jsonStr = JSON.stringify(payload, null, 2);
+      setIrnEwbRawPayload(jsonStr);
+      setIrnEwbError(null);
+    } catch (err) {
+      setIrnEwbError(`Error constructing IRN/EWB payload: ${err.message}`);
+      console.error("IRN/EWB Payload Construction Error:", err);
+    }
+  }, [
+    taxSch, supTyp, regRev, ecmGstin, igstOnIntra,
+    docTyp, docNo, docDt,
+    sellerGstin, sellerLglNm, sellerTrdNm, sellerAddr1, sellerAddr2, sellerLoc, sellerPin, sellerStcd, sellerPh, sellerEm,
+    buyerGstin, buyerLglNm, buyerTrdNm, buyerPos, buyerAddr1, buyerAddr2, buyerLoc, buyerPin, buyerStcd, buyerPh, buyerEm,
+    dispNm, dispAddr1, dispAddr2, dispLoc, dispPin, dispStcd,
+    shipGstin, shipLglNm, shipTrdNm, shipAddr1, shipAddr2, shipLoc, shipPin, shipStcd,
+    itemSlNo, itemPrdDesc, itemIsServc, itemHsnCd, itemBarcde, itemQty, itemFreeQty, itemUnit, itemUnitPrice, itemTotAmt,
+    itemDiscount, itemPreTaxVal, itemAssAmt, itemGstRt, itemIgstAmt, itemCgstAmt, itemSgstAmt, itemCesRt, itemCesAmt,
+    itemCesNonAdvlAmt, itemStateCesRt, itemStateCesAmt, itemStateCesNonAdvlAmt, itemOthChrg, itemTotItemVal,
+    itemOrdLineRef, itemOrgCntry, itemPrdSlNo, itemBchNm, itemBchExpDt, itemBchWrDt, itemAttribNm, itemAttribVal,
+    valAssVal, valCgstVal, valSgstVal, valIgstVal, valCesVal, valStCesVal, valDiscount, valOthChrg, valRndOffAmt,
+    valTotInvVal, valTotInvValFc,
+    payNm, payAccDet, payMode, payFinInsBr, payPayTerm, payPayInstr, payCrTrn, payDirDr, payCrDay, payPaidAmt, payPaymtDue,
+    invRm, docPerdInvStDt, docPerdInvEndDt, precDocInvNo, precDocInvDt, precDocOthRefNo,
+    contrRecAdvRefr, contrRecAdvDt, contrTendRefr, contrContrRefr, contrExtRefr, contrProjRefr, contrPORefr, contrPORefDt,
+    addlDocUrl, addlDocDocs, addlDocInfo,
+    expShipBNo, expShipBDt, expPort, expRefClm, expForCur, expCntCode, expExpDuty,
+    transId, transName, distance, transDocNo, transDocDt, vehNo, vehType, transMode
+  ]);
+
+  const base64EncodeIRNEwbPayload = useCallback(() => {
+    if (!irnEwbRawPayload) {
+      setIrnEwbError('Raw IRN/EWB Payload is required for Base64 encoding.');
+      return;
+    }
+    try {
+      const payloadString = typeof irnEwbRawPayload === 'string'
+        ? irnEwbRawPayload
+        : JSON.stringify(irnEwbRawPayload);
+      const base64Encoded = btoa(unescape(encodeURIComponent(payloadString)));
+      setIrnEwbBase64EncodedPayload(base64Encoded);
+      setIrnEwbError(null);
+    } catch (err) {
+      setIrnEwbError(`Error Base64 encoding IRN/EWB payload: ${err.message}`);
+      console.error("IRN/EWB Base64 Encoding Error:", err);
+    }
+  }, [irnEwbRawPayload]);
+
+  const encryptIRNEwbPayload = useCallback(() => {
+    if (!irnEwbBase64EncodedPayload || !decryptedSek) {
+      setIrnEwbError('Base64 Encoded requestJson(IRN) Payload and Decrypted SEK are required for encryption.');
+      return;
+    }
+    try {
+      const aesKey = CryptoJS.enc.Base64.parse(decryptedSek);
+      const encrypted = CryptoJS.AES.encrypt(irnEwbBase64EncodedPayload, aesKey, {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7
+      }).toString();
+      if (!encrypted) {
+        throw new Error("AES encryption failed. Check SEK and payload.");
+      }
+      setIrnEwbEncryptedPayload(encrypted);
+      setIrnEwbError(null);
+    } catch (err) {
+      setIrnEwbError(`Error encrypting IRN/EWB payload: ${err.message}. Ensure SEK is valid.`);
+      console.error("IRN/EWB Encryption Error Details:", err);
+    }
+  }, [irnEwbBase64EncodedPayload, decryptedSek]);
+
+  const sendIRNEwbRequest = useCallback(async () => {
+  if (!irnEwbEncryptedPayload || !authToken || !clientId || !clientSecret || !gstin || !username) {
+    setIrnEwbError('All prerequisites (Encrypted IRN/EWB, AuthToken, Client details, Username) must be provided.');
+    setIrnEwbLoading(false);
+    return;
+  }
+  if (!irnEwbEncryptedPayload.trim()) {
+    setIrnEwbError('Encrypted IRN/EWB payload is empty or invalid.');
+    setIrnEwbLoading(false);
+    return;
+  }
+  setIrnEwbLoading(true);
+  setIrnEwbError(null);
+  setIrnEwbApiResponse(null);
+  const irnEwbApiUrl = "/eicore/v1.03/Invoice"; // Verify this URL
+  const requestBody = {
+    Data: irnEwbEncryptedPayload,
+  };
+  const headers = {
+    'AuthToken': authToken,
+    'Gstin': gstin,
+    'client_id': clientId,
+    'client_secret': clientSecret,
+    'user_name': username,
+    'Content-Type': 'application/json',
+  };
+  console.log("Sending Request with Body:", requestBody);
+  console.log("Headers:", headers);
+  try {
+    const response = await fetch(irnEwbApiUrl, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+    const rawResponseText = await response.text();
+    console.log("Raw API Response:", rawResponseText);
+    if (!rawResponseText.trim()) {
+      setIrnEwbError(`API Response Error: Received empty response from API. Status: ${response.status} ${response.statusText}.`);
+      setIrnEwbLoading(false);
+      return;
+    }
+    if (!response.ok) {
+      let errorMessage = `API Error: ${response.status} ${response.statusText}.`;
+      if (response.status === 404) {
+        errorMessage += ` The API endpoint '${irnEwbApiUrl}' was not found.`;
+      }
+      errorMessage += ` Raw Response: "${rawResponseText.substring(0, 200)}..."`;
+      setIrnEwbError(errorMessage);
+      setIrnEwbLoading(false);
+      return;
+    }
+    const data = JSON.parse(rawResponseText);
+    setIrnEwbApiResponse(data);
+    if (data.Status === "ACT") {
+      setIrnEwbError(null);
+    } else {
+      setIrnEwbError(data.ErrorDetails?.[0]?.ErrorMessage || "IRN/E-Way Bill generation failed with Status: " + data.Status);
+    }
+  } catch (err) {
+    setIrnEwbError(`IRN/E-Way Bill API Request Failed: ${err.message}.`);
+    console.error("API Request Error:", err);
+  } finally {
+    setIrnEwbLoading(false);
+  }
+}, [irnEwbEncryptedPayload, authToken, clientId, clientSecret, gstin, username]);
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        E-Way Bill Generation App
+      </Typography>
+      <Typography variant="subtitle1" color="text.secondary" align="center" sx={{ mb: 4 }}>
+        Enter details to generate an E-Way Bill.
+      </Typography>
+
+      {irnEwbError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {irnEwbError}
+        </Alert>
+      )}
+
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Phase 2: E-Invoice & E-Way Bill Details
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Enter details for the e-invoice and e-way bill. Fields are pre-filled with provided JSON data.
+        </Alert>
+
+        <Accordion defaultExpanded sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Transaction Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Tax Scheme" value={taxSch} onChange={(e) => setTaxSch(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Supply Type" value={supTyp} onChange={(e) => setSupTyp(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Reverse Charge (Y/N)" value={regRev} onChange={(e) => setRegRev(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Ecom GSTIN" value={ecmGstin || ''} onChange={(e) => setEcmGstin(e.target.value || null)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="IGST on Intra (Y/N)" value={igstOnIntra} onChange={(e) => setIgstOnIntra(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Document Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}><TextField label="Document Type" value={docTyp} onChange={(e) => setDocTyp(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Document No" value={docNo} onChange={(e) => setDocNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Document Date (DD/MM/YYYY)" value={docDt} onChange={(e) => setDocDt(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Seller Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="GSTIN" value={sellerGstin} onChange={(e) => setSellerGstin(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Legal Name" value={sellerLglNm} onChange={(e) => setSellerLglNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Trade Name" value={sellerTrdNm} onChange={(e) => setSellerTrdNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 1" value={sellerAddr1} onChange={(e) => setSellerAddr1(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 2" value={sellerAddr2} onChange={(e) => setSellerAddr2(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Location" value={sellerLoc} onChange={(e) => setSellerLoc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PIN Code" value={sellerPin} onChange={(e) => setSellerPin(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="State Code" value={sellerStcd} onChange={(e) => setSellerStcd(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Phone" value={sellerPh} onChange={(e) => setSellerPh(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Email" value={sellerEm} onChange={(e) => setSellerEm(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Buyer Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="GSTIN" value={buyerGstin} onChange={(e) => setBuyerGstin(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Legal Name" value={buyerLglNm} onChange={(e) => setBuyerLglNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Trade Name" value={buyerTrdNm} onChange={(e) => setBuyerTrdNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Place of Supply" value={buyerPos} onChange={(e) => setBuyerPos(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 1" value={buyerAddr1} onChange={(e) => setBuyerAddr1(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 2" value={buyerAddr2} onChange={(e) => setBuyerAddr2(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Location" value={buyerLoc} onChange={(e) => setBuyerLoc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PIN Code" value={buyerPin} onChange={(e) => setBuyerPin(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="State Code" value={buyerStcd} onChange={(e) => setBuyerStcd(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Phone" value={buyerPh} onChange={(e) => setBuyerPh(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Email" value={buyerEm} onChange={(e) => setBuyerEm(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Dispatch Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Name" value={dispNm} onChange={(e) => setDispNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 1" value={dispAddr1} onChange={(e) => setDispAddr1(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 2" value={dispAddr2} onChange={(e) => setDispAddr2(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Location" value={dispLoc} onChange={(e) => setDispLoc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PIN Code" value={dispPin} onChange={(e) => setDispPin(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="State Code" value={dispStcd} onChange={(e) => setDispStcd(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Shipping Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="GSTIN" value={shipGstin} onChange={(e) => setShipGstin(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Legal Name" value={shipLglNm} onChange={(e) => setShipLglNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Trade Name" value={shipTrdNm} onChange={(e) => setShipTrdNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 1" value={shipAddr1} onChange={(e) => setShipAddr1(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Address 2" value={shipAddr2} onChange={(e) => setShipAddr2(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Location" value={shipLoc} onChange={(e) => setShipLoc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PIN Code" value={shipPin} onChange={(e) => setShipPin(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="State Code" value={shipStcd} onChange={(e) => setShipStcd(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Item Details (Single Item)</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}><TextField label="Serial No" value={itemSlNo} onChange={(e) => setItemSlNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Product Description" value={itemPrdDesc} onChange={(e) => setItemPrdDesc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Is Service (Y/N)" value={itemIsServc} onChange={(e) => setItemIsServc(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="HSN Code" value={itemHsnCd} onChange={(e) => setItemHsnCd(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Barcode" value={itemBarcde} onChange={(e) => setItemBarcde(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Quantity" value={itemQty} onChange={(e) => setItemQty(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Free Quantity" value={itemFreeQty} onChange={(e) => setItemFreeQty(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Unit" value={itemUnit} onChange={(e) => setItemUnit(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Unit Price" value={itemUnitPrice} onChange={(e) => setItemUnitPrice(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Total Amount" value={itemTotAmt} onChange={(e) => setItemTotAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Discount" value={itemDiscount} onChange={(e) => setItemDiscount(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Pre-Tax Value" value={itemPreTaxVal} onChange={(e) => setItemPreTaxVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Assessable Amount" value={itemAssAmt} onChange={(e) => setItemAssAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="GST Rate (%)" value={itemGstRt} onChange={(e) => setItemGstRt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="IGST Amount" value={itemIgstAmt} onChange={(e) => setItemIgstAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="CGST Amount" value={itemCgstAmt} onChange={(e) => setItemCgstAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="SGST Amount" value={itemSgstAmt} onChange={(e) => setItemSgstAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Cess Rate (%)" value={itemCesRt} onChange={(e) => setItemCesRt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Cess Amount" value={itemCesAmt} onChange={(e) => setItemCesAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Cess Non-Advalorem Amount" value={itemCesNonAdvlAmt} onChange={(e) => setItemCesNonAdvlAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="State Cess Rate (%)" value={itemStateCesRt} onChange={(e) => setItemStateCesRt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="State Cess Amount" value={itemStateCesAmt} onChange={(e) => setItemStateCesAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="State Cess Non-Advalorem Amount" value={itemStateCesNonAdvlAmt} onChange={(e) => setItemStateCesNonAdvlAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Other Charges" value={itemOthChrg} onChange={(e) => setItemOthChrg(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Total Item Value" value={itemTotItemVal} onChange={(e) => setItemTotItemVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Order Line Reference" value={itemOrdLineRef} onChange={(e) => setItemOrdLineRef(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Origin Country" value={itemOrgCntry} onChange={(e) => setItemOrgCntry(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Product Serial No" value={itemPrdSlNo} onChange={(e) => setItemPrdSlNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Batch Name" value={itemBchNm} onChange={(e) => setItemBchNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Batch Expiry Date" value={itemBchExpDt} onChange={(e) => setItemBchExpDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Batch Warranty Date" value={itemBchWrDt} onChange={(e) => setItemBchWrDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Attribute Name" value={itemAttribNm} onChange={(e) => setItemAttribNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Attribute Value" value={itemAttribVal} onChange={(e) => setItemAttribVal(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Value Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}><TextField label="Assessable Value" value={valAssVal} onChange={(e) => setValAssVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="CGST Value" value={valCgstVal} onChange={(e) => setValCgstVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="SGST Value" value={valSgstVal} onChange={(e) => setValSgstVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="IGST Value" value={valIgstVal} onChange={(e) => setValIgstVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Cess Value" value={valCesVal} onChange={(e) => setValCesVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="State Cess Value" value={valStCesVal} onChange={(e) => setValStCesVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Discount" value={valDiscount} onChange={(e) => setValDiscount(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Other Charges" value={valOthChrg} onChange={(e) => setValOthChrg(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Round Off Amount" value={valRndOffAmt} onChange={(e) => setValRndOffAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Total Invoice Value" value={valTotInvVal} onChange={(e) => setValTotInvVal(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Total Invoice Value (FC)" value={valTotInvValFc} onChange={(e) => setValTotInvValFc(e.target.value)} fullWidth type="number" /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Payment Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Payee Name" value={payNm} onChange={(e) => setPayNm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Account Details" value={payAccDet} onChange={(e) => setPayAccDet(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Mode" value={payMode} onChange={(e) => setPayMode(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Financial Institution Branch" value={payFinInsBr} onChange={(e) => setPayFinInsBr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Payment Term" value={payPayTerm} onChange={(e) => setPayPayTerm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Payment Instruction" value={payPayInstr} onChange={(e) => setPayPayInstr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Credit Transfer" value={payCrTrn} onChange={(e) => setPayCrTrn(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Direct Debit" value={payDirDr} onChange={(e) => setPayDirDr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Credit Days" value={payCrDay} onChange={(e) => setPayCrDay(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Paid Amount" value={payPaidAmt} onChange={(e) => setPayPaidAmt(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Payment Due" value={payPaymtDue} onChange={(e) => setPayPaymtDue(e.target.value)} fullWidth type="number" /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Reference Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Invoice Remark" value={invRm} onChange={(e) => setInvRm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Period Start Date" value={docPerdInvStDt} onChange={(e) => setDocPerdInvStDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Period End Date" value={docPerdInvEndDt} onChange={(e) => setDocPerdInvEndDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Preceding Invoice No" value={precDocInvNo} onChange={(e) => setPrecDocInvNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Preceding Invoice Date" value={precDocInvDt} onChange={(e) => setPrecDocInvDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Other Reference No" value={precDocOthRefNo} onChange={(e) => setPrecDocOthRefNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Receipt Advice Reference" value={contrRecAdvRefr} onChange={(e) => setContrRecAdvRefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Receipt Advice Date" value={contrRecAdvDt} onChange={(e) => setContrRecAdvDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Tender Reference" value={contrTendRefr} onChange={(e) => setContrTendRefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Contract Reference" value={contrContrRefr} onChange={(e) => setContrContrRefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="External Reference" value={contrExtRefr} onChange={(e) => setContrExtRefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Project Reference" value={contrProjRefr} onChange={(e) => setContrProjRefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PO Reference" value={contrPORefr} onChange={(e) => setContrPORefr(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="PO Reference Date" value={contrPORefDt} onChange={(e) => setContrPORefDt(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Additional Document Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}><TextField label="URL" value={addlDocUrl} onChange={(e) => setAddlDocUrl(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Documents" value={addlDocDocs} onChange={(e) => setAddlDocDocs(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Info" value={addlDocInfo} onChange={(e) => setAddlDocInfo(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Export Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}><TextField label="Shipping Bill No" value={expShipBNo} onChange={(e) => setExpShipBNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Shipping Bill Date" value={expShipBDt} onChange={(e) => setExpShipBDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Port Code" value={expPort} onChange={(e) => setExpPort(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Refund Claim (Y/N)" value={expRefClm} onChange={(e) => setExpRefClm(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Foreign Currency" value={expForCur} onChange={(e) => setExpForCur(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Country Code" value={expCntCode} onChange={(e) => setExpCntCode(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={4}><TextField label="Export Duty" value={expExpDuty || ''} onChange={(e) => setExpExpDuty(e.target.value || null)} fullWidth type="number" /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">E-Way Bill Details</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Transporter ID" value={transId} onChange={(e) => setTransId(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Transporter Name" value={transName} onChange={(e) => setTransName(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Distance (KM)" value={distance} onChange={(e) => setDistance(e.target.value)} fullWidth type="number" /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Transport Doc No" value={transDocNo} onChange={(e) => setTransDocNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Transport Doc Date (DD/MM/YYYY)" value={transDocDt} onChange={(e) => setTransDocDt(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Vehicle No" value={vehNo} onChange={(e) => setVehNo(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Vehicle Type (R=Regular, O=Over Dimension)" value={vehType} onChange={(e) => setVehType(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Transport Mode (1=Road, 2=Rail, 3=Air, 4=Ship)" value={transMode} onChange={(e) => setTransMode(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion sx={{ mb: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Authentication Tokens</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}><TextField label="Auth Token" value={authToken} onChange={(e) => setAuthToken(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Decrypted SEK" value={decryptedSek} onChange={(e) => setDecryptedSek(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Client Secret" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="GSTIN" value={gstin} onChange={(e) => setGstin(e.target.value)} fullWidth /></Grid>
+              <Grid item xs={12} sm={6}><TextField label="Username" value={username} onChange={(e) => setUsername(e.target.value)} fullWidth /></Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+      </Paper>
+
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Phase 3: Generate IRN & E-Way Bill
+        </Typography>
+        <Divider sx={{ mb: 2 }} />
+
+        <Box sx={{ mb: 2 }}>
+          <Button variant="contained" onClick={constructIRNEwbPayload} sx={{ mr: 2 }}>
+            3.1 Construct IRN/EWB Payload (Raw JSON)
+          </Button>
+          {irnEwbRawPayload && (
+            <Box sx={{ mt: 2, backgroundColor: '#f0f0f0', p: 2, borderRadius: 1 }}>
+              <Typography variant="subtitle1">Raw Request Json(IRN) Payload:</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#f9f9f9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                {irnEwbRawPayload}
+              </Paper>
+            </Box>
+          )}
+        </Box>
+
+        <Box sx={{ mb: 2 }}>
+          <Button variant="contained" onClick={base64EncodeIRNEwbPayload} sx={{ mr: 2 }} disabled={!irnEwbRawPayload}>
+            3.2 Base64 Encoded Request Json(IRN) Payload
+          </Button>
+          {irnEwbBase64EncodedPayload && (
+            <Box sx={{ mt: 2, backgroundColor: '#f0f0f0', p: 2, borderRadius: 1, wordBreak: 'break-all' }}>
+              <Typography variant="subtitle1">Base64 Encoded Request Json(IRN) Payload:</Typography>
+              <Typography sx={{ fontStyle: 'italic', color: 'green' }}>{irnEwbBase64EncodedPayload}</Typography>
+            </Box>
+          )}
+        </Box>
+
+        <Box sx={{ mb: 2 }}>
+          <Button variant="contained" onClick={encryptIRNEwbPayload} sx={{ mr: 2 }} disabled={!irnEwbBase64EncodedPayload || !decryptedSek}>
+            3.3 AES Encrypt IRN/EWB Payload
+          </Button>
+          {irnEwbEncryptedPayload && (
+            <Box sx={{ mt: 2, backgroundColor: '#f0f0f0', p: 2, borderRadius: 1, wordBreak: 'break-all' }}>
+              <Typography variant="subtitle1">AES Encrypted IRN/EWB Payload:</Typography>
+              <Typography sx={{ fontStyle: 'italic', color: 'blue' }}>{irnEwbEncryptedPayload}</Typography>
+            </Box>
+          )}
+        </Box>
+
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={sendIRNEwbRequest}
+            disabled={irnEwbLoading || !irnEwbEncryptedPayload || !authToken || !clientId || !clientSecret || !gstin || !username}
+          >
+            {irnEwbLoading ? <CircularProgress size={24} color="inherit" /> : '3.4 Send IRN & E-Way Bill Request'}
+          </Button>
+        </Box>
+      </Paper>
+
+      {irnEwbApiResponse && (
+        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h5" gutterBottom>
+            Phase 4: IRN & E-Way Bill API Response
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#e8f5e9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+            {typeof irnEwbApiResponse === 'string' ? irnEwbApiResponse : JSON.stringify(irnEwbApiResponse, null, 2)}
+          </Paper>
+          {irnEwbApiResponse.Status === "ACT" ? (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              IRN & E-Way Bill Generated Successfully!<br />
+              Ack No: {irnEwbApiResponse.AckNo}<br />
+              Ack Date: {irnEwbApiResponse.AckDt}<br />
+              IRN: {irnEwbApiResponse.Irn}<br />
+              EWB No: {irnEwbApiResponse.EwbNo}<br />
+              EWB Date: {irnEwbApiResponse.EwbDt}<br />
+              EWB Validity: {irnEwbApiResponse.EwbValidTill}<br />
+              Signed Invoice: <Typography component="span" sx={{ wordBreak: 'break-all', fontSize: '0.85em' }}>{irnEwbApiResponse.SignedInvoice}</Typography><br />
+              Signed QR Code: <Typography component="span" sx={{ wordBreak: 'break-all', fontSize: '0.85em' }}>{irnEwbApiResponse.SignedQRCode}</Typography><br />
+              Remarks: {irnEwbApiResponse.Remarks || 'N/A'}
+            </Alert>
+          ) : (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              IRN & E-Way Bill Generation Failed:<br />
+              Code: {irnEwbApiResponse?.ErrorDetails?.[0]?.ErrorCode || 'N/A'}<br />
+              Message: {irnEwbApiResponse?.ErrorDetails?.[0]?.ErrorMessage || 'N/A'}<br />
+              Info: {irnEwbApiResponse?.ErrorDetails?.[0]?.InfoDtls || 'N/A'}
+            </Alert>
+          )}
+        </Paper>
+      )}
+    </Container>
+  );
+};
+
+export default IRNEWayBillGenerator;
