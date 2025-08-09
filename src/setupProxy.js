@@ -1,25 +1,19 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
+//const app = express();
 module.exports = function(app) {
-  app.use(
-    '/eivital',
-    createProxyMiddleware({
-      target: 'https://api.sandbox.core.irisirp.com',
-      changeOrigin: true,
-      pathRewrite: {
-        '^/eivital': '/',  // <--- retain /eivital in path!
-      },
-      logLevel: 'debug',
-    })
-  );
   app.use(
     '/eicore',
     createProxyMiddleware({
       target: 'https://api.sandbox.core.irisirp.com',
       changeOrigin: true,
       pathRewrite: {
-       '^/eicore': '/',   // <--- retain /eicore in path!
+        '^/eicore': '/', // Retain /eicore in path!
       },
       logLevel: 'debug',
     })
   );
 };
+// Import proxy setup
+//require('./setproxy')(app);
+
+//app.listen(3000, () => console.log('Server running on port 3000'));

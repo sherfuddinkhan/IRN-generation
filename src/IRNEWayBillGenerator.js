@@ -427,7 +427,8 @@ const IRNEWayBillGenerator = () => {
     }
     try {
       const aesKey = CryptoJS.enc.Base64.parse(decryptedSek);
-      const encrypted = CryptoJS.AES.encrypt(irnEwbBase64EncodedPayload, aesKey, {
+      const parsedPayload = CryptoJS.enc.Base64.parse(irnEwbBase64EncodedPayload);
+      const encrypted = CryptoJS.AES.encrypt(parsedPayload, aesKey, {
         mode: CryptoJS.mode.ECB,
         padding: CryptoJS.pad.Pkcs7
       }).toString();
