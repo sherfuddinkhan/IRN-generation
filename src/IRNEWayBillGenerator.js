@@ -23,175 +23,175 @@ if (typeof window !== 'undefined' && !window.Buffer) {
 }
 
 const IRNEWayBillGenerator = () => {
-  // Transaction Details (TranDtls)
-  const [taxSch, setTaxSch] = useState('GST');
-  const [supTyp, setSupTyp] = useState('B2B');
-  const [regRev, setRegRev] = useState('Y');
-  const [ecmGstin, setEcmGstin] = useState(null);
-  const [igstOnIntra, setIgstOnIntra] = useState('N');
+ // Transaction Details (TranDtls)
+const [taxSch, setTaxSch] = useState('GST');
+const [supTyp, setSupTyp] = useState('EXPWP');
+const [regRev, setRegRev] = useState('N');
+const [ecmGstin, setEcmGstin] = useState(null);
+const [igstOnIntra, setIgstOnIntra] = useState('N');
 
-  // Document Details (DocDtls)
-  const [docTyp, setDocTyp] = useState('INV');
-  const [docNo, setDocNo] = useState('DOC/002989888');
-  const [docDt, setDocDt] = useState('31/07/2025');
+// Document Details (DocDtls)
+const [docTyp, setDocTyp] = useState('INV');
+const [docNo, setDocNo] = useState('DOC/042989888');
+const [docDt, setDocDt] = useState('25/08/2025');
 
-  // Seller Details (SellerDtls)
-  const [sellerGstin, setSellerGstin] = useState('36AALCC6633K004');
-  const [sellerLglNm, setSellerLglNm] = useState('NIC company pvt ltd');
-  const [sellerTrdNm, setSellerTrdNm] = useState('NIC Industries');
-  const [sellerAddr1, setSellerAddr1] = useState('5th block, kuvempu layout');
-  const [sellerAddr2, setSellerAddr2] = useState('kuvempu layout');
-  const [sellerLoc, setSellerLoc] = useState('GANDHINAGAR');
-  const [sellerPin, setSellerPin] = useState('518001');
-  const [sellerStcd, setSellerStcd] = useState('36');
-  const [sellerPh, setSellerPh] = useState('9000000000');
-  const [sellerEm, setSellerEm] = useState('abc@gmail.com');
+// Seller Details (SellerDtls)
+const [sellerGstin, setSellerGstin] = useState('36AALCC6633K004');
+const [sellerLglNm, setSellerLglNm] = useState('NIC company pvt ltd');
+const [sellerTrdNm, setSellerTrdNm] = useState('NIC Industries');
+const [sellerAddr1, setSellerAddr1] = useState('5th block, kuvempu layout');
+const [sellerAddr2, setSellerAddr2] = useState('kuvempu layout');
+const [sellerLoc, setSellerLoc] = useState('HYDERABAD');
+const [sellerPin, setSellerPin] = useState('500001');
+const [sellerStcd, setSellerStcd] = useState('36');
+const [sellerPh, setSellerPh] = useState('9000000000');
+const [sellerEm, setSellerEm] = useState('abc@gmail.com');
 
-  // Buyer Details (BuyerDtls)
-  const [buyerGstin, setBuyerGstin] = useState('36AALCC6633K004');
-  const [buyerLglNm, setBuyerLglNm] = useState('XYZ company pvt ltd');
-  const [buyerTrdNm, setBuyerTrdNm] = useState('XYZ Industries');
-  const [buyerPos, setBuyerPos] = useState('12');
-  const [buyerAddr1, setBuyerAddr1] = useState('7th block, kuvempu layout');
-  const [buyerAddr2, setBuyerAddr2] = useState('kuvempu layout');
-  const [buyerLoc, setBuyerLoc] = useState('GANDHINAGAR');
-  const [buyerPin, setBuyerPin] = useState('562160');
-  const [buyerStcd, setBuyerStcd] = useState('36');
-  const [buyerPh, setBuyerPh] = useState('9959728586');
-  const [buyerEm, setBuyerEm] = useState('xyz@yahoo.com');
+// Buyer Details (BuyerDtls)
+const [buyerGstin, setBuyerGstin] = useState('URP');
+const [buyerLglNm, setBuyerLglNm] = useState('XYZ company pvt ltd');
+const [buyerTrdNm, setBuyerTrdNm] = useState('XYZ Industries');
+const [buyerPos, setBuyerPos] = useState('96');
+const [buyerAddr1, setBuyerAddr1] = useState('PO Box 12345');
+const [buyerAddr2, setBuyerAddr2] = useState('Dubai Main Road');
+const [buyerLoc, setBuyerLoc] = useState('DUBAI');
+const [buyerPin, setBuyerPin] = useState('999999');
+const [buyerStcd, setBuyerStcd] = useState('96');
+const [buyerPh, setBuyerPh] = useState('9959728586');
+const [buyerEm, setBuyerEm] = useState('xyz@yahoo.com');
 
-  // Dispatch Details (DispDtls)
-  const [dispNm, setDispNm] = useState('ABC company pvt ltd');
-  const [dispAddr1, setDispAddr1] = useState('7th block, kuvempu layout');
-  const [dispAddr2, setDispAddr2] = useState('kuvempu layout');
-  const [dispLoc, setDispLoc] = useState('Banagalore');
-  const [dispPin, setDispPin] = useState('562160');
-  const [dispStcd, setDispStcd] = useState('36');
+// Dispatch Details (DispDtls)
+const [dispNm, setDispNm] = useState('ABC company pvt ltd');
+const [dispAddr1, setDispAddr1] = useState('7th block, kuvempu layout');
+const [dispAddr2, setDispAddr2] = useState('kuvempu layout');
+const [dispLoc, setDispLoc] = useState('HYDERABAD');
+const [dispPin, setDispPin] = useState('500004');
+const [dispStcd, setDispStcd] = useState('36');
 
-  // Shipping Details (ShipDtls)
-  const [shipGstin, setShipGstin] = useState('29AWGPV7107B1Z1');
-  const [shipLglNm, setShipLglNm] = useState('CBE company pvt ltd');
-  const [shipTrdNm, setShipTrdNm] = useState('kuvempu layout');
-  const [shipAddr1, setShipAddr1] = useState('7th block, kuvempu layout');
-  const [shipAddr2, setShipAddr2] = useState('kuvempu layout');
-  const [shipLoc, setShipLoc] = useState('Banagalore');
-  const [shipPin, setShipPin] = useState('562160');
-  const [shipStcd, setShipStcd] = useState('29');
+// Shipping Details (ShipDtls)
+const [shipGstin, setShipGstin] = useState('URP');
+const [shipLglNm, setShipLglNm] = useState('XYZ company pvt ltd');
+const [shipTrdNm, setShipTrdNm] = useState('XYZ Industries');
+const [shipAddr1, setShipAddr1] = useState('PO Box 12345');
+const [shipAddr2, setShipAddr2] = useState('Dubai Main Road');
+const [shipLoc, setShipLoc] = useState('DUBAI');
+const [shipPin, setShipPin] = useState('999999');
+const [shipStcd, setShipStcd] = useState('96');
 
-  // Item List (ItemList - single item)
-  const [itemSlNo, setItemSlNo] = useState('1');
-  const [itemPrdDesc, setItemPrdDesc] = useState('Rice');
-  const [itemIsServc, setItemIsServc] = useState('N');
-  const [itemHsnCd, setItemHsnCd] = useState('1001');
-  const [itemBarcde, setItemBarcde] = useState('123456');
-  const [itemQty, setItemQty] = useState('100.345');
-  const [itemFreeQty, setItemFreeQty] = useState('10');
-  const [itemUnit, setItemUnit] = useState('BAG');
-  const [itemUnitPrice, setItemUnitPrice] = useState('99.55');
-  const [itemTotAmt, setItemTotAmt] = useState('9988.84');
-  const [itemDiscount, setItemDiscount] = useState('10');
-  const [itemPreTaxVal, setItemPreTaxVal] = useState('1');
-  const [itemAssAmt, setItemAssAmt] = useState('9978.84');
-  const [itemGstRt, setItemGstRt] = useState('12');
-  const [itemIgstAmt, setItemIgstAmt] = useState('1197.46');
-  const [itemCgstAmt, setItemCgstAmt] = useState('0');
-  const [itemSgstAmt, setItemSgstAmt] = useState('0');
-  const [itemCesRt, setItemCesRt] = useState('5');
-  const [itemCesAmt, setItemCesAmt] = useState('498.94');
-  const [itemCesNonAdvlAmt, setItemCesNonAdvlAmt] = useState('10');
-  const [itemStateCesRt, setItemStateCesRt] = useState('12');
-  const [itemStateCesAmt, setItemStateCesAmt] = useState('1197.46');
-  const [itemStateCesNonAdvlAmt, setItemStateCesNonAdvlAmt] = useState('5');
-  const [itemOthChrg, setItemOthChrg] = useState('10');
-  const [itemTotItemVal, setItemTotItemVal] = useState('12897.7');
-  const [itemOrdLineRef, setItemOrdLineRef] = useState('3256');
-  const [itemOrgCntry, setItemOrgCntry] = useState('IN');
-  const [itemPrdSlNo, setItemPrdSlNo] = useState('12345');
-  const [itemBchNm, setItemBchNm] = useState('123456');
-  const [itemBchExpDt, setItemBchExpDt] = useState('31/07/2025');
-  const [itemBchWrDt, setItemBchWrDt] = useState('31/07/2025');
-  const [itemAttribNm, setItemAttribNm] = useState('Rice');
-  const [itemAttribVal, setItemAttribVal] = useState('10000');
+// Item List (ItemList - single item)
+const [itemSlNo, setItemSlNo] = useState('1');
+const [itemPrdDesc, setItemPrdDesc] = useState('Rice');
+const [itemIsServc, setItemIsServc] = useState('N');
+const [itemHsnCd, setItemHsnCd] = useState('1001');
+const [itemBarcde, setItemBarcde] = useState('123456');
+const [itemQty, setItemQty] = useState('100');
+const [itemFreeQty, setItemFreeQty] = useState('0');
+const [itemUnit, setItemUnit] = useState('BAG');
+const [itemUnitPrice, setItemUnitPrice] = useState('900');
+const [itemTotAmt, setItemTotAmt] = useState('90000');
+const [itemDiscount, setItemDiscount] = useState('0');
+const [itemPreTaxVal, setItemPreTaxVal] = useState('90000');
+const [itemAssAmt, setItemAssAmt] = useState('90000');
+const [itemGstRt, setItemGstRt] = useState('18');
+const [itemIgstAmt, setItemIgstAmt] = useState('16200');
+const [itemCgstAmt, setItemCgstAmt] = useState('0');
+const [itemSgstAmt, setItemSgstAmt] = useState('0');
+const [itemCesRt, setItemCesRt] = useState('0');
+const [itemCesAmt, setItemCesAmt] = useState('0');
+const [itemCesNonAdvlAmt, setItemCesNonAdvlAmt] = useState('0');
+const [itemStateCesRt, setItemStateCesRt] = useState('0');
+const [itemStateCesAmt, setItemStateCesAmt] = useState('0');
+const [itemStateCesNonAdvlAmt, setItemStateCesNonAdvlAmt] = useState('0');
+const [itemOthChrg, setItemOthChrg] = useState('0');
+const [itemTotItemVal, setItemTotItemVal] = useState('106200');
+const [itemOrdLineRef, setItemOrdLineRef] = useState('3256');
+const [itemOrgCntry, setItemOrgCntry] = useState('IN');
+const [itemPrdSlNo, setItemPrdSlNo] = useState('12345');
+const [itemBchNm, setItemBchNm] = useState('123456');
+const [itemBchExpDt, setItemBchExpDt] = useState('25/08/2025');
+const [itemBchWrDt, setItemBchWrDt] = useState('25/08/2025');
+const [itemAttribNm, setItemAttribNm] = useState('Rice');
+const [itemAttribVal, setItemAttribVal] = useState('10000');
 
-  // Value Details (ValDtls)
-  const [valAssVal, setValAssVal] = useState('9978.84');
-  const [valCgstVal, setValCgstVal] = useState('0');
-  const [valSgstVal, setValSgstVal] = useState('0');
-  const [valIgstVal, setValIgstVal] = useState('1197.46');
-  const [valCesVal, setValCesVal] = useState('508.94');
-  const [valStCesVal, setValStCesVal] = useState('1202.46');
-  const [valDiscount, setValDiscount] = useState('10');
-  const [valOthChrg, setValOthChrg] = useState('20');
-  const [valRndOffAmt, setValRndOffAmt] = useState('0.3');
-  const [valTotInvVal, setValTotInvVal] = useState('12908');
-  const [valTotInvValFc, setValTotInvValFc] = useState('12897.7');
+// Value Details (ValDtls)
+const [valAssVal, setValAssVal] = useState('90000');
+const [valCgstVal, setValCgstVal] = useState('0');
+const [valSgstVal, setValSgstVal] = useState('0');
+const [valIgstVal, setValIgstVal] = useState('16200');
+const [valCesVal, setValCesVal] = useState('0');
+const [valStCesVal, setValStCesVal] = useState('0');
+const [valDiscount, setValDiscount] = useState('0');
+const [valOthChrg, setValOthChrg] = useState('0');
+const [valRndOffAmt, setValRndOffAmt] = useState('0');
+const [valTotInvVal, setValTotInvVal] = useState('106200');
+const [valTotInvValFc, setValTotInvValFc] = useState('106200');
 
-  // Payment Details (PayDtls)
-  const [payNm, setPayNm] = useState('ABCDE');
-  const [payAccDet, setPayAccDet] = useState('5697389713210');
-  const [payMode, setPayMode] = useState('Cash');
-  const [payFinInsBr, setPayFinInsBr] = useState('SBIN11000');
-  const [payPayTerm, setPayPayTerm] = useState('100');
-  const [payPayInstr, setPayPayInstr] = useState('Gift');
-  const [payCrTrn, setPayCrTrn] = useState('test');
-  const [payDirDr, setPayDirDr] = useState('test');
-  const [payCrDay, setPayCrDay] = useState('100');
-  const [payPaidAmt, setPayPaidAmt] = useState('10000');
-  const [payPaymtDue, setPayPaymtDue] = useState('5000');
+// Payment Details (PayDtls)
+const [payNm, setPayNm] = useState('ABCDE');
+const [payAccDet, setPayAccDet] = useState('5697389713210');
+const [payMode, setPayMode] = useState('Cash');
+const [payFinInsBr, setPayFinInsBr] = useState('SBIN11000');
+const [payPayTerm, setPayPayTerm] = useState('100');
+const [payPayInstr, setPayPayInstr] = useState('Gift');
+const [payCrTrn, setPayCrTrn] = useState('test');
+const [payDirDr, setPayDirDr] = useState('test');
+const [payCrDay, setPayCrDay] = useState('100');
+const [payPaidAmt, setPayPaidAmt] = useState('10000');
+const [payPaymtDue, setPayPaymtDue] = useState('488');
 
-  // Reference Details (RefDtls)
-  const [invRm, setInvRm] = useState('TEST');
-  const [docPerdInvStDt, setDocPerdInvStDt] = useState('31/07/2025');
-  const [docPerdInvEndDt, setDocPerdInvEndDt] = useState('31/07/2025');
-  const [precDocInvNo, setPrecDocInvNo] = useState('DOC/002989888');
-  const [precDocInvDt, setPrecDocInvDt] = useState('31/07/2025');
-  const [precDocOthRefNo, setPrecDocOthRefNo] = useState('123456');
-  const [contrRecAdvRefr, setContrRecAdvRefr] = useState('Doc/003');
-  const [contrRecAdvDt, setContrRecAdvDt] = useState('31/07/2025');
-  const [contrTendRefr, setContrTendRefr] = useState('Abc001');
-  const [contrContrRefr, setContrContrRefr] = useState('Co123');
-  const [contrExtRefr, setContrExtRefr] = useState('Yo456');
-  const [contrProjRefr, setContrProjRefr] = useState('Doc-456');
-  const [contrPORefr, setContrPORefr] = useState('Doc-7897887744');
-  const [contrPORefDt, setContrPORefDt] = useState('31/07/2025');
+// Reference Details (RefDtls)
+const [invRm, setInvRm] = useState('TEST');
+const [docPerdInvStDt, setDocPerdInvStDt] = useState('31/07/2025');
+const [docPerdInvEndDt, setDocPerdInvEndDt] = useState('31/07/2025');
+const [precDocInvNo, setPrecDocInvNo] = useState('DOC/002989888');
+const [precDocInvDt, setPrecDocInvDt] = useState('31/07/2025');
+const [precDocOthRefNo, setPrecDocOthRefNo] = useState('123456');
+const [contrRecAdvRefr, setContrRecAdvRefr] = useState('Doc/003');
+const [contrRecAdvDt, setContrRecAdvDt] = useState('31/07/2025');
+const [contrTendRefr, setContrTendRefr] = useState('Abc001');
+const [contrContrRefr, setContrContrRefr] = useState('Co123');
+const [contrExtRefr, setContrExtRefr] = useState('Yo456');
+const [contrProjRefr, setContrProjRefr] = useState('Doc-456');
+const [contrPORefr, setContrPORefr] = useState('Doc-7897887744');
+const [contrPORefDt, setContrPORefDt] = useState('31/07/2025');
 
-  // Additional Document Details (AddlDocDtls)
-  const [addlDocUrl, setAddlDocUrl] = useState('');
-  const [addlDocDocs, setAddlDocDocs] = useState('');
-  const [addlDocInfo, setAddlDocInfo] = useState('');
+// Additional Document Details (AddlDocDtls)
+const [addlDocUrl, setAddlDocUrl] = useState('https://nicindustries.com/export/docs/SB987654.pdf');
+const [addlDocDocs, setAddlDocDocs] = useState('Shipping Bill');
+const [addlDocInfo, setAddlDocInfo] = useState('Shipping Bill SB987654 dated 25/08/2025 for rice export');
 
-  // Export Details (ExpDtls)
-  const [expShipBNo, setExpShipBNo] = useState('');
-  const [expShipBDt, setExpShipBDt] = useState('');
-  const [expPort, setExpPort] = useState('');
-  const [expRefClm, setExpRefClm] = useState('');
-  const [expForCur, setExpForCur] = useState('');
-  const [expCntCode, setExpCntCode] = useState('');
-  const [expExpDuty, setExpExpDuty] = useState(null);
+// Export Details (ExpDtls)
+const [expShipBNo, setExpShipBNo] = useState('SB987654');
+const [expShipBDt, setExpShipBDt] = useState('25/08/2025');
+const [expPort, setExpPort] = useState('INMAA1');
+const [expRefClm, setExpRefClm] = useState('Y');
+const [expForCur, setExpForCur] = useState('USD');
+const [expCntCode, setExpCntCode] = useState('AE');
+const [expExpDuty, setExpExpDuty] = useState('0');
 
-  // E-Way Bill Details (EwbDtls)
-  const [transId, setTransId] = useState('12AWGPV7107B1Z1');
-  const [transName, setTransName] = useState('XYZ EXPORTS');
-  const [distance, setDistance] = useState('100');
-  const [transDocNo, setTransDocNo] = useState('DOC01');
-  const [transDocDt, setTransDocDt] = useState('31/07/2025');
-  const [vehNo, setVehNo] = useState('ka123456666');
-  const [vehType, setVehType] = useState('R');
-  const [transMode, setTransMode] = useState('1');
+// E-Way Bill Details (EwbDtls)
+const [transId, setTransId] = useState('12AWGPV7107B1Z1');
+const [transName, setTransName] = useState('XYZ EXPORTS');
+const [distance, setDistance] = useState('630');
+const [transDocNo, setTransDocNo] = useState('DOC/042989888');
+const [transDocDt, setTransDocDt] = useState('25/08/2025');
+const [vehNo, setVehNo] = useState('TS01AB1234');
+const [vehType, setVehType] = useState('R');
+const [transMode, setTransMode] = useState('1');
 
-  // IRN/E-Way Bill Intermediate and Response States
-  const [irnEwbRawPayload, setIrnEwbRawPayload] = useState('');
-  const [irnEwbBase64EncodedPayload, setIrnEwbBase64EncodedPayload] = useState('');
-  const [irnEwbEncryptedPayload, setIrnEwbEncryptedPayload] = useState('');
-  const [irnEwbLoading, setIrnEwbLoading] = useState(false);
-  const [irnEwbError, setIrnEwbError] = useState(null);
-  const [irnEwbApiResponse, setIrnEwbApiResponse] = useState(null);
-  const [authToken, setAuthToken] = useState('');
-  const [decryptedSek, setDecryptedSek] = useState('');
-  const [clientId, setClientId] = useState('UFf6Ra1Iy5CcsjuKNE1n3KBjIWSpOUdH');
-  const [clientSecret, setClientSecret] = useState('w3Hl7rf64Es2CxG+zyEAaXxHvjmkVnrB');
-  const [gstin, setGstin] = useState('36AALCC6633K004');
-  const [username, setUsername] = useState('');
+// IRN/E-Way Bill Intermediate and Response States
+const [irnEwbRawPayload, setIrnEwbRawPayload] = useState('');
+const [irnEwbBase64EncodedPayload, setIrnEwbBase64EncodedPayload] = useState('');
+const [irnEwbEncryptedPayload, setIrnEwbEncryptedPayload] = useState('');
+const [irnEwbLoading, setIrnEwbLoading] = useState(false);
+const [irnEwbError, setIrnEwbError] = useState(null);
+const [irnEwbApiResponse, setIrnEwbApiResponse] = useState(null);
+const [authToken, setAuthToken] = useState('');
+const [decryptedSek, setDecryptedSek] = useState('');
+const [clientId, setClientId] = useState('UFf6Ra1Iy5CcsjuKNE1n3KBjIWSpOUdH');
+const [clientSecret, setClientSecret] = useState('w3Hl7rf64Es2CxG+zyEAaXxHvjmkVnrB');
+const [gstin, setGstin] = useState('36AALCC6633K004');
+const [username, setUsername] = useState('');
 
   const constructIRNEwbPayload = useCallback(() => {
     if (!taxSch || !supTyp || !regRev || !igstOnIntra || !docTyp || !docNo || !docDt ||
@@ -457,7 +457,7 @@ const IRNEWayBillGenerator = () => {
   setIrnEwbLoading(true);
   setIrnEwbError(null);
   setIrnEwbApiResponse(null);
-  const irnEwbApiUrl = "/eicore/v1.03/Invoice"; // Verify this URL
+  const irnEwbApiUrl = "https://api.sandbox.core.irisirp.com/eicore/v1.03/Invoice"; // Verify this URL
   const requestBody = {
     Data: irnEwbEncryptedPayload,
   };
