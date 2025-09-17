@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Container,
   TextField,
@@ -14,185 +14,186 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import CryptoJS from 'crypto-js';
-import { Buffer } from 'buffer';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Buffer } from 'buffer';
 
+// Ensure Buffer is available globally
 if (typeof window !== 'undefined' && !window.Buffer) {
   window.Buffer = Buffer;
 }
 
 const IRNEWayBillGenerator = () => {
- // Transaction Details (TranDtls)
-const [taxSch, setTaxSch] = useState('GST');
-const [supTyp, setSupTyp] = useState('EXPWP');
-const [regRev, setRegRev] = useState('N');
-const [ecmGstin, setEcmGstin] = useState(null);
-const [igstOnIntra, setIgstOnIntra] = useState('N');
+  // State variables
+  const [taxSch, setTaxSch] = useState('GST');
+  const [supTyp, setSupTyp] = useState('EXPWP');
+  const [regRev, setRegRev] = useState('N');
+  const [ecmGstin, setEcmGstin] = useState(null);
+  const [igstOnIntra, setIgstOnIntra] = useState('N');
+  const [docTyp, setDocTyp] = useState('INV');
+  const [docNo, setDocNo] = useState('DOC/042989888');
+  const [docDt, setDocDt] = useState('25/08/2025');
+  const [sellerGstin, setSellerGstin] = useState('36AALCC6633K004');
+  const [sellerLglNm, setSellerLglNm] = useState('NIC company pvt ltd');
+  const [sellerTrdNm, setSellerTrdNm] = useState('NIC Industries');
+  const [sellerAddr1, setSellerAddr1] = useState('5th block, kuvempu layout');
+  const [sellerAddr2, setSellerAddr2] = useState('kuvempu layout');
+  const [sellerLoc, setSellerLoc] = useState('HYDERABAD');
+  const [sellerPin, setSellerPin] = useState('500001');
+  const [sellerStcd, setSellerStcd] = useState('36');
+  const [sellerPh, setSellerPh] = useState('9000000000');
+  const [sellerEm, setSellerEm] = useState('abc@gmail.com');
+  const [buyerGstin, setBuyerGstin] = useState('URP');
+  const [buyerLglNm, setBuyerLglNm] = useState('XYZ company pvt ltd');
+  const [buyerTrdNm, setBuyerTrdNm] = useState('XYZ Industries');
+  const [buyerPos, setBuyerPos] = useState('96');
+  const [buyerAddr1, setBuyerAddr1] = useState('PO Box 12345');
+  const [buyerAddr2, setBuyerAddr2] = useState('Dubai Main Road');
+  const [buyerLoc, setBuyerLoc] = useState('DUBAI');
+  const [buyerPin, setBuyerPin] = useState('999999');
+  const [buyerStcd, setBuyerStcd] = useState('96');
+  const [buyerPh, setBuyerPh] = useState('9959728586');
+  const [buyerEm, setBuyerEm] = useState('xyz@yahoo.com');
+  const [dispNm, setDispNm] = useState('ABC company pvt ltd');
+  const [dispAddr1, setDispAddr1] = useState('7th block, kuvempu layout');
+  const [dispAddr2, setDispAddr2] = useState('kuvempu layout');
+  const [dispLoc, setDispLoc] = useState('HYDERABAD');
+  const [dispPin, setDispPin] = useState('500004');
+  const [dispStcd, setDispStcd] = useState('36');
+  const [shipGstin, setShipGstin] = useState('URP');
+  const [shipLglNm, setShipLglNm] = useState('XYZ company pvt ltd');
+  const [shipTrdNm, setShipTrdNm] = useState('XYZ Industries');
+  const [shipAddr1, setShipAddr1] = useState('PO Box 12345');
+  const [shipAddr2, setShipAddr2] = useState('Dubai Main Road');
+  const [shipLoc, setShipLoc] = useState('DUBAI');
+  const [shipPin, setShipPin] = useState('999999');
+  const [shipStcd, setShipStcd] = useState('96');
+  const [itemSlNo, setItemSlNo] = useState('1');
+  const [itemPrdDesc, setItemPrdDesc] = useState('Rice');
+  const [itemIsServc, setItemIsServc] = useState('N');
+  const [itemHsnCd, setItemHsnCd] = useState('1001');
+  const [itemBarcde, setItemBarcde] = useState('123456');
+  const [itemQty, setItemQty] = useState('100');
+  const [itemFreeQty, setItemFreeQty] = useState('0');
+  const [itemUnit, setItemUnit] = useState('BAG');
+  const [itemUnitPrice, setItemUnitPrice] = useState('900');
+  const [itemTotAmt, setItemTotAmt] = useState('90000');
+  const [itemDiscount, setItemDiscount] = useState('0');
+  const [itemPreTaxVal, setItemPreTaxVal] = useState('90000');
+  const [itemAssAmt, setItemAssAmt] = useState('90000');
+  const [itemGstRt, setItemGstRt] = useState('18');
+  const [itemIgstAmt, setItemIgstAmt] = useState('16200');
+  const [itemCgstAmt, setItemCgstAmt] = useState('0');
+  const [itemSgstAmt, setItemSgstAmt] = useState('0');
+  const [itemCesRt, setItemCesRt] = useState('0');
+  const [itemCesAmt, setItemCesAmt] = useState('0');
+  const [itemCesNonAdvlAmt, setItemCesNonAdvlAmt] = useState('0');
+  const [itemStateCesRt, setItemStateCesRt] = useState('0');
+  const [itemStateCesAmt, setItemStateCesAmt] = useState('0');
+  const [itemStateCesNonAdvlAmt, setItemStateCesNonAdvlAmt] = useState('0');
+  const [itemOthChrg, setItemOthChrg] = useState('0');
+  const [itemTotItemVal, setItemTotItemVal] = useState('106200');
+  const [itemOrdLineRef, setItemOrdLineRef] = useState('3256');
+  const [itemOrgCntry, setItemOrgCntry] = useState('IN');
+  const [itemPrdSlNo, setItemPrdSlNo] = useState('12345');
+  const [itemBchNm, setItemBchNm] = useState('123456');
+  const [itemBchExpDt, setItemBchExpDt] = useState('25/08/2025');
+  const [itemBchWrDt, setItemBchWrDt] = useState('25/08/2025');
+  const [itemAttribNm, setItemAttribNm] = useState('Rice');
+  const [itemAttribVal, setItemAttribVal] = useState('10000');
+  const [valAssVal, setValAssVal] = useState('90000');
+  const [valCgstVal, setValCgstVal] = useState('0');
+  const [valSgstVal, setValSgstVal] = useState('0');
+  const [valIgstVal, setValIgstVal] = useState('16200');
+  const [valCesVal, setValCesVal] = useState('0');
+  const [valStCesVal, setValStCesVal] = useState('0');
+  const [valDiscount, setValDiscount] = useState('0');
+  const [valOthChrg, setValOthChrg] = useState('0');
+  const [valRndOffAmt, setValRndOffAmt] = useState('0');
+  const [valTotInvVal, setValTotInvVal] = useState('106200');
+  const [valTotInvValFc, setValTotInvValFc] = useState('106200');
+  const [payNm, setPayNm] = useState('ABCDE');
+  const [payAccDet, setPayAccDet] = useState('5697389713210');
+  const [payMode, setPayMode] = useState('Cash');
+  const [payFinInsBr, setPayFinInsBr] = useState('SBIN11000');
+  const [payPayTerm, setPayPayTerm] = useState('100');
+  const [payPayInstr, setPayPayInstr] = useState('Gift');
+  const [payCrTrn, setPayCrTrn] = useState('test');
+  const [payDirDr, setPayDirDr] = useState('test');
+  const [payCrDay, setPayCrDay] = useState('100');
+  const [payPaidAmt, setPayPaidAmt] = useState('10000');
+  const [payPaymtDue, setPayPaymtDue] = useState('488');
+  const [invRm, setInvRm] = useState('TEST');
+  const [docPerdInvStDt, setDocPerdInvStDt] = useState('31/07/2025');
+  const [docPerdInvEndDt, setDocPerdInvEndDt] = useState('31/07/2025');
+  const [precDocInvNo, setPrecDocInvNo] = useState('DOC/002989888');
+  const [precDocInvDt, setPrecDocInvDt] = useState('31/07/2025');
+  const [precDocOthRefNo, setPrecDocOthRefNo] = useState('123456');
+  const [contrRecAdvRefr, setContrRecAdvRefr] = useState('Doc/003');
+  const [contrRecAdvDt, setContrRecAdvDt] = useState('31/07/2025');
+  const [contrTendRefr, setContrTendRefr] = useState('Abc001');
+  const [contrContrRefr, setContrContrRefr] = useState('Co123');
+  const [contrExtRefr, setContrExtRefr] = useState('Yo456');
+  const [contrProjRefr, setContrProjRefr] = useState('Doc-456');
+  const [contrPORefr, setContrPORefr] = useState('Doc-7897887744');
+  const [contrPORefDt, setContrPORefDt] = useState('31/07/2025');
+  const [addlDocUrl, setAddlDocUrl] = useState('https://nicindustries.com/export/docs/SB987654.pdf');
+  const [addlDocDocs, setAddlDocDocs] = useState('Shipping Bill');
+  const [addlDocInfo, setAddlDocInfo] = useState('Shipping Bill SB987654 dated 25/08/2025 for rice export');
+  const [expShipBNo, setExpShipBNo] = useState('SB987654');
+  const [expShipBDt, setExpShipBDt] = useState('25/08/2025');
+  const [expPort, setExpPort] = useState('INMAA1');
+  const [expRefClm, setExpRefClm] = useState('Y');
+  const [expForCur, setExpForCur] = useState('USD');
+  const [expCntCode, setExpCntCode] = useState('AE');
+  const [expExpDuty, setExpExpDuty] = useState('0');
+  const [transId, setTransId] = useState('12AWGPV7107B1Z1');
+  const [transName, setTransName] = useState('XYZ EXPORTS');
+  const [distance, setDistance] = useState('630');
+  const [transDocNo, setTransDocNo] = useState('DOC/042989888');
+  const [transDocDt, setTransDocDt] = useState('25/08/2025');
+  const [vehNo, setVehNo] = useState('TS01AB1234');
+  const [vehType, setVehType] = useState('R');
+  const [transMode, setTransMode] = useState('1');
+  const [irnEwbRawPayload, setIrnEwbRawPayload] = useState('');
+  const [irnEwbBase64EncodedPayload, setIrnEwbBase64EncodedPayload] = useState('');
+  const [irnEwbEncryptedPayload, setIrnEwbEncryptedPayload] = useState('');
+  const [irnEwbLoading, setIrnEwbLoading] = useState(false);
+  const [irnEwbError, setIrnEwbError] = useState(null);
+  const [irnEwbApiResponse, setIrnEwbApiResponse] = useState(null);
+  const [authToken, setAuthToken] = useState('');
+  const [decryptedSek, setDecryptedSek] = useState('');
+  const [clientId, setClientId] = useState('UFf6Ra1Iy5CcsjuKNE1n3KBjIWSpOUdH');
+  const [clientSecret, setClientSecret] = useState('w3Hl7rf64Es2CxG+zyEAaXxHvjmkVnrB');
+  const [gstin, setGstin] = useState('36AALCC6633K004');
+  const [username, setUsername] = useState('');
+  const [decryptedApiResponse, setDecryptedApiResponse] = useState('');
+  const [decryptionError, setDecryptionError] = useState(null);
+  const [isCryptoJSLoaded, setIsCryptoJSLoaded] = useState(false);
+  const cryptoJsRef = useRef(null);
 
-// Document Details (DocDtls)
-const [docTyp, setDocTyp] = useState('INV');
-const [docNo, setDocNo] = useState('DOC/042989888');
-const [docDt, setDocDt] = useState('25/08/2025');
+  // Load CryptoJS dynamically
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+    script.onload = () => {
+      console.log("CryptoJS loaded successfully.");
+      cryptoJsRef.current = window.CryptoJS;
+      setIsCryptoJSLoaded(true);
+    };
+    script.onerror = () => {
+      console.error("Failed to load CryptoJS.");
+      setDecryptionError("Failed to load the decryption library. Please check your network connection.");
+    };
+    document.head.appendChild(script);
 
-// Seller Details (SellerDtls)
-const [sellerGstin, setSellerGstin] = useState('36AALCC6633K004');
-const [sellerLglNm, setSellerLglNm] = useState('NIC company pvt ltd');
-const [sellerTrdNm, setSellerTrdNm] = useState('NIC Industries');
-const [sellerAddr1, setSellerAddr1] = useState('5th block, kuvempu layout');
-const [sellerAddr2, setSellerAddr2] = useState('kuvempu layout');
-const [sellerLoc, setSellerLoc] = useState('HYDERABAD');
-const [sellerPin, setSellerPin] = useState('500001');
-const [sellerStcd, setSellerStcd] = useState('36');
-const [sellerPh, setSellerPh] = useState('9000000000');
-const [sellerEm, setSellerEm] = useState('abc@gmail.com');
+    return () => {
+      if (document.head.contains(script)) {
+        document.head.removeChild(script);
+      }
+    };
+  }, []);
 
-// Buyer Details (BuyerDtls)
-const [buyerGstin, setBuyerGstin] = useState('URP');
-const [buyerLglNm, setBuyerLglNm] = useState('XYZ company pvt ltd');
-const [buyerTrdNm, setBuyerTrdNm] = useState('XYZ Industries');
-const [buyerPos, setBuyerPos] = useState('96');
-const [buyerAddr1, setBuyerAddr1] = useState('PO Box 12345');
-const [buyerAddr2, setBuyerAddr2] = useState('Dubai Main Road');
-const [buyerLoc, setBuyerLoc] = useState('DUBAI');
-const [buyerPin, setBuyerPin] = useState('999999');
-const [buyerStcd, setBuyerStcd] = useState('96');
-const [buyerPh, setBuyerPh] = useState('9959728586');
-const [buyerEm, setBuyerEm] = useState('xyz@yahoo.com');
-
-// Dispatch Details (DispDtls)
-const [dispNm, setDispNm] = useState('ABC company pvt ltd');
-const [dispAddr1, setDispAddr1] = useState('7th block, kuvempu layout');
-const [dispAddr2, setDispAddr2] = useState('kuvempu layout');
-const [dispLoc, setDispLoc] = useState('HYDERABAD');
-const [dispPin, setDispPin] = useState('500004');
-const [dispStcd, setDispStcd] = useState('36');
-
-// Shipping Details (ShipDtls)
-const [shipGstin, setShipGstin] = useState('URP');
-const [shipLglNm, setShipLglNm] = useState('XYZ company pvt ltd');
-const [shipTrdNm, setShipTrdNm] = useState('XYZ Industries');
-const [shipAddr1, setShipAddr1] = useState('PO Box 12345');
-const [shipAddr2, setShipAddr2] = useState('Dubai Main Road');
-const [shipLoc, setShipLoc] = useState('DUBAI');
-const [shipPin, setShipPin] = useState('999999');
-const [shipStcd, setShipStcd] = useState('96');
-
-// Item List (ItemList - single item)
-const [itemSlNo, setItemSlNo] = useState('1');
-const [itemPrdDesc, setItemPrdDesc] = useState('Rice');
-const [itemIsServc, setItemIsServc] = useState('N');
-const [itemHsnCd, setItemHsnCd] = useState('1001');
-const [itemBarcde, setItemBarcde] = useState('123456');
-const [itemQty, setItemQty] = useState('100');
-const [itemFreeQty, setItemFreeQty] = useState('0');
-const [itemUnit, setItemUnit] = useState('BAG');
-const [itemUnitPrice, setItemUnitPrice] = useState('900');
-const [itemTotAmt, setItemTotAmt] = useState('90000');
-const [itemDiscount, setItemDiscount] = useState('0');
-const [itemPreTaxVal, setItemPreTaxVal] = useState('90000');
-const [itemAssAmt, setItemAssAmt] = useState('90000');
-const [itemGstRt, setItemGstRt] = useState('18');
-const [itemIgstAmt, setItemIgstAmt] = useState('16200');
-const [itemCgstAmt, setItemCgstAmt] = useState('0');
-const [itemSgstAmt, setItemSgstAmt] = useState('0');
-const [itemCesRt, setItemCesRt] = useState('0');
-const [itemCesAmt, setItemCesAmt] = useState('0');
-const [itemCesNonAdvlAmt, setItemCesNonAdvlAmt] = useState('0');
-const [itemStateCesRt, setItemStateCesRt] = useState('0');
-const [itemStateCesAmt, setItemStateCesAmt] = useState('0');
-const [itemStateCesNonAdvlAmt, setItemStateCesNonAdvlAmt] = useState('0');
-const [itemOthChrg, setItemOthChrg] = useState('0');
-const [itemTotItemVal, setItemTotItemVal] = useState('106200');
-const [itemOrdLineRef, setItemOrdLineRef] = useState('3256');
-const [itemOrgCntry, setItemOrgCntry] = useState('IN');
-const [itemPrdSlNo, setItemPrdSlNo] = useState('12345');
-const [itemBchNm, setItemBchNm] = useState('123456');
-const [itemBchExpDt, setItemBchExpDt] = useState('25/08/2025');
-const [itemBchWrDt, setItemBchWrDt] = useState('25/08/2025');
-const [itemAttribNm, setItemAttribNm] = useState('Rice');
-const [itemAttribVal, setItemAttribVal] = useState('10000');
-
-// Value Details (ValDtls)
-const [valAssVal, setValAssVal] = useState('90000');
-const [valCgstVal, setValCgstVal] = useState('0');
-const [valSgstVal, setValSgstVal] = useState('0');
-const [valIgstVal, setValIgstVal] = useState('16200');
-const [valCesVal, setValCesVal] = useState('0');
-const [valStCesVal, setValStCesVal] = useState('0');
-const [valDiscount, setValDiscount] = useState('0');
-const [valOthChrg, setValOthChrg] = useState('0');
-const [valRndOffAmt, setValRndOffAmt] = useState('0');
-const [valTotInvVal, setValTotInvVal] = useState('106200');
-const [valTotInvValFc, setValTotInvValFc] = useState('106200');
-
-// Payment Details (PayDtls)
-const [payNm, setPayNm] = useState('ABCDE');
-const [payAccDet, setPayAccDet] = useState('5697389713210');
-const [payMode, setPayMode] = useState('Cash');
-const [payFinInsBr, setPayFinInsBr] = useState('SBIN11000');
-const [payPayTerm, setPayPayTerm] = useState('100');
-const [payPayInstr, setPayPayInstr] = useState('Gift');
-const [payCrTrn, setPayCrTrn] = useState('test');
-const [payDirDr, setPayDirDr] = useState('test');
-const [payCrDay, setPayCrDay] = useState('100');
-const [payPaidAmt, setPayPaidAmt] = useState('10000');
-const [payPaymtDue, setPayPaymtDue] = useState('488');
-
-// Reference Details (RefDtls)
-const [invRm, setInvRm] = useState('TEST');
-const [docPerdInvStDt, setDocPerdInvStDt] = useState('31/07/2025');
-const [docPerdInvEndDt, setDocPerdInvEndDt] = useState('31/07/2025');
-const [precDocInvNo, setPrecDocInvNo] = useState('DOC/002989888');
-const [precDocInvDt, setPrecDocInvDt] = useState('31/07/2025');
-const [precDocOthRefNo, setPrecDocOthRefNo] = useState('123456');
-const [contrRecAdvRefr, setContrRecAdvRefr] = useState('Doc/003');
-const [contrRecAdvDt, setContrRecAdvDt] = useState('31/07/2025');
-const [contrTendRefr, setContrTendRefr] = useState('Abc001');
-const [contrContrRefr, setContrContrRefr] = useState('Co123');
-const [contrExtRefr, setContrExtRefr] = useState('Yo456');
-const [contrProjRefr, setContrProjRefr] = useState('Doc-456');
-const [contrPORefr, setContrPORefr] = useState('Doc-7897887744');
-const [contrPORefDt, setContrPORefDt] = useState('31/07/2025');
-
-// Additional Document Details (AddlDocDtls)
-const [addlDocUrl, setAddlDocUrl] = useState('https://nicindustries.com/export/docs/SB987654.pdf');
-const [addlDocDocs, setAddlDocDocs] = useState('Shipping Bill');
-const [addlDocInfo, setAddlDocInfo] = useState('Shipping Bill SB987654 dated 25/08/2025 for rice export');
-
-// Export Details (ExpDtls)
-const [expShipBNo, setExpShipBNo] = useState('SB987654');
-const [expShipBDt, setExpShipBDt] = useState('25/08/2025');
-const [expPort, setExpPort] = useState('INMAA1');
-const [expRefClm, setExpRefClm] = useState('Y');
-const [expForCur, setExpForCur] = useState('USD');
-const [expCntCode, setExpCntCode] = useState('AE');
-const [expExpDuty, setExpExpDuty] = useState('0');
-
-// E-Way Bill Details (EwbDtls)
-const [transId, setTransId] = useState('12AWGPV7107B1Z1');
-const [transName, setTransName] = useState('XYZ EXPORTS');
-const [distance, setDistance] = useState('630');
-const [transDocNo, setTransDocNo] = useState('DOC/042989888');
-const [transDocDt, setTransDocDt] = useState('25/08/2025');
-const [vehNo, setVehNo] = useState('TS01AB1234');
-const [vehType, setVehType] = useState('R');
-const [transMode, setTransMode] = useState('1');
-
-// IRN/E-Way Bill Intermediate and Response States
-const [irnEwbRawPayload, setIrnEwbRawPayload] = useState('');
-const [irnEwbBase64EncodedPayload, setIrnEwbBase64EncodedPayload] = useState('');
-const [irnEwbEncryptedPayload, setIrnEwbEncryptedPayload] = useState('');
-const [irnEwbLoading, setIrnEwbLoading] = useState(false);
-const [irnEwbError, setIrnEwbError] = useState(null);
-const [irnEwbApiResponse, setIrnEwbApiResponse] = useState(null);
-const [authToken, setAuthToken] = useState('');
-const [decryptedSek, setDecryptedSek] = useState('');
-const [clientId, setClientId] = useState('UFf6Ra1Iy5CcsjuKNE1n3KBjIWSpOUdH');
-const [clientSecret, setClientSecret] = useState('w3Hl7rf64Es2CxG+zyEAaXxHvjmkVnrB');
-const [gstin, setGstin] = useState('36AALCC6633K004');
-const [username, setUsername] = useState('');
-
+  // Construct IRN/EWB Payload
   const constructIRNEwbPayload = useCallback(() => {
     if (!taxSch || !supTyp || !regRev || !igstOnIntra || !docTyp || !docNo || !docDt ||
         !sellerGstin || !sellerLglNm || !sellerAddr1 || !sellerLoc || !sellerPin || !sellerStcd ||
@@ -402,6 +403,7 @@ const [username, setUsername] = useState('');
     transId, transName, distance, transDocNo, transDocDt, vehNo, vehType, transMode
   ]);
 
+  // Base64 Encode Payload
   const base64EncodeIRNEwbPayload = useCallback(() => {
     if (!irnEwbRawPayload) {
       setIrnEwbError('Raw IRN/EWB Payload is required for Base64 encoding.');
@@ -420,17 +422,23 @@ const [username, setUsername] = useState('');
     }
   }, [irnEwbRawPayload]);
 
+  // Encrypt Payload
   const encryptIRNEwbPayload = useCallback(() => {
+    if (!isCryptoJSLoaded || !cryptoJsRef.current) {
+      setIrnEwbError("Encryption library is not yet loaded. Please wait a moment.");
+      return;
+    }
     if (!irnEwbBase64EncodedPayload || !decryptedSek) {
       setIrnEwbError('Base64 Encoded requestJson(IRN) Payload and Decrypted SEK are required for encryption.');
       return;
     }
     try {
-      const aesKey = CryptoJS.enc.Base64.parse(decryptedSek);
-      const parsedPayload = CryptoJS.enc.Base64.parse(irnEwbBase64EncodedPayload);
-      const encrypted = CryptoJS.AES.encrypt(parsedPayload, aesKey, {
-        mode: CryptoJS.mode.ECB,
-        padding: CryptoJS.pad.Pkcs7
+      const crypto = cryptoJsRef.current;
+      const aesKey = crypto.enc.Base64.parse(decryptedSek);
+      const parsedPayload = crypto.enc.Base64.parse(irnEwbBase64EncodedPayload);
+      const encrypted = crypto.AES.encrypt(parsedPayload, aesKey, {
+        mode: crypto.mode.ECB,
+        padding: crypto.pad.Pkcs7
       }).toString();
       if (!encrypted) {
         throw new Error("AES encryption failed. Check SEK and payload.");
@@ -441,73 +449,122 @@ const [username, setUsername] = useState('');
       setIrnEwbError(`Error encrypting IRN/EWB payload: ${err.message}. Ensure SEK is valid.`);
       console.error("IRN/EWB Encryption Error Details:", err);
     }
-  }, [irnEwbBase64EncodedPayload, decryptedSek]);
+  }, [irnEwbBase64EncodedPayload, decryptedSek, isCryptoJSLoaded]);
 
-  const sendIRNEwbRequest = useCallback(async () => {
-  if (!irnEwbEncryptedPayload || !authToken || !clientId || !clientSecret || !gstin || !username) {
-    setIrnEwbError('All prerequisites (Encrypted IRN/EWB, AuthToken, Client details, Username) must be provided.');
-    setIrnEwbLoading(false);
-    return;
-  }
-  if (!irnEwbEncryptedPayload.trim()) {
-    setIrnEwbError('Encrypted IRN/EWB payload is empty or invalid.');
-    setIrnEwbLoading(false);
-    return;
-  }
-  setIrnEwbLoading(true);
-  setIrnEwbError(null);
-  setIrnEwbApiResponse(null);
-  const irnEwbApiUrl = "https://api.sandbox.core.irisirp.com/eicore/v1.03/Invoice"; // Verify this URL
-  const requestBody = {
-    Data: irnEwbEncryptedPayload,
-  };
-  const headers = {
-    'AuthToken': authToken,
-    'Gstin': gstin,
-    'client_id': clientId,
-    'client_secret': clientSecret,
-    'user_name': username,
-    'Content-Type': 'application/json',
-  };
-  console.log("Sending Request with Body:", requestBody);
-  console.log("Headers:", headers);
-  try {
-    const response = await fetch(irnEwbApiUrl, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(requestBody),
-    });
-    const rawResponseText = await response.text();
-    console.log("Raw API Response:", rawResponseText);
-    if (!rawResponseText.trim()) {
-      setIrnEwbError(`API Response Error: Received empty response from API. Status: ${response.status} ${response.statusText}.`);
-      setIrnEwbLoading(false);
-      return;
+  // Decrypt API Response Data
+  const decryptApiResponse = useCallback((encryptedData) => {
+    if (!isCryptoJSLoaded || !cryptoJsRef.current) {
+      setDecryptionError("Decryption library is not yet loaded. Please wait a moment.");
+      return null;
     }
-    if (!response.ok) {
-      let errorMessage = `API Error: ${response.status} ${response.statusText}.`;
-      if (response.status === 404) {
-        errorMessage += ` The API endpoint '${irnEwbApiUrl}' was not found.`;
+    if (!encryptedData || !decryptedSek) {
+      setDecryptionError('Encrypted API response Data and Decrypted SEK are required for decryption.');
+      return null;
+    }
+    try {
+      const crypto = cryptoJsRef.current;
+      const aesKey = crypto.enc.Base64.parse(decryptedSek);
+      const decrypted = crypto.AES.decrypt(encryptedData, aesKey, {
+        mode: crypto.mode.ECB,
+        padding: crypto.pad.Pkcs7
+      }).toString(crypto.enc.Utf8);
+      if (!decrypted) {
+        throw new Error("AES decryption failed. Ensure the SEK and encrypted data are correct.");
       }
-      errorMessage += ` Raw Response: "${rawResponseText.substring(0, 200)}..."`;
-      setIrnEwbError(errorMessage);
+      try {
+        const parsedJson = JSON.parse(decrypted);
+        return JSON.stringify(parsedJson, null, 2);
+      } catch (jsonError) {
+        if (typeof decrypted === 'object') {
+          return JSON.stringify(decrypted, null, 2);
+        }
+        return decrypted;
+      }
+    } catch (err) {
+      setDecryptionError(`Error decrypting API response Data: ${err.message}.`);
+      console.error("Decryption Error Details:", err);
+      return null;
+    }
+  }, [decryptedSek, isCryptoJSLoaded]);
+
+  // Send IRN/EWB Request
+  const sendIRNEwbRequest = useCallback(async () => {
+    if (!irnEwbEncryptedPayload || !authToken || !clientId || !clientSecret || !gstin || !username) {
+      setIrnEwbError('All prerequisites (Encrypted IRN/EWB, AuthToken, Client details, Username) must be provided.');
       setIrnEwbLoading(false);
       return;
     }
-    const data = JSON.parse(rawResponseText);
-    setIrnEwbApiResponse(data);
-    if (data.Status === "ACT") {
-      setIrnEwbError(null);
-    } else {
-      setIrnEwbError(data.ErrorDetails?.[0]?.ErrorMessage || "IRN/E-Way Bill generation failed with Status: " + data.Status);
+    if (!irnEwbEncryptedPayload.trim()) {
+      setIrnEwbError('Encrypted IRN/EWB payload is empty or invalid.');
+      setIrnEwbLoading(false);
+      return;
     }
-  } catch (err) {
-    setIrnEwbError(`IRN/E-Way Bill API Request Failed: ${err.message}.`);
-    console.error("API Request Error:", err);
-  } finally {
-    setIrnEwbLoading(false);
-  }
-}, [irnEwbEncryptedPayload, authToken, clientId, clientSecret, gstin, username]);
+    setIrnEwbLoading(true);
+    setIrnEwbError(null);
+    setIrnEwbApiResponse(null);
+    setDecryptedApiResponse('');
+    setDecryptionError(null);
+    const irnEwbApiUrl = '/eicore/v1.03/invoice';
+    const requestBody = {
+      Data: irnEwbEncryptedPayload,
+    };
+    const headers = {
+      'AuthToken': authToken,
+      'Gstin': gstin,
+      'client_id': clientId,
+      'client_secret': clientSecret,
+      'user_name': username,
+      'Content-Type': 'application/json',
+    };
+    console.log("Sending Request with Body:", requestBody);
+    console.log("Headers:", headers);
+    try {
+      const response = await fetch(irnEwbApiUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+      const rawResponseText = await response.text();
+      console.log("Raw API Response:", rawResponseText);
+      if (!rawResponseText.trim()) {
+        setIrnEwbError(`API Response Error: Received empty response from API. Status: ${response.status} ${response.statusText}.`);
+        setIrnEwbLoading(false);
+        return;
+      }
+      if (!response.ok) {
+        let errorMessage = `API Error: ${response.status} ${response.statusText}.`;
+        if (response.status === 404) {
+          errorMessage += ` The API endpoint '${irnEwbApiUrl}' was not found.`;
+        }
+        errorMessage += ` Raw Response: "${rawResponseText.substring(0, 200)}..."`;
+        setIrnEwbError(errorMessage);
+        setIrnEwbLoading(false);
+        return;
+      }
+      let data;
+      try {
+        data = JSON.parse(rawResponseText);
+        setIrnEwbApiResponse(data);
+        if (data.Status === 1 && data.Data) {
+          const decrypted = decryptApiResponse(data.Data);
+          if (decrypted) {
+            setDecryptedApiResponse(decrypted);
+          } else {
+            setIrnEwbError("Failed to decrypt API response Data field.");
+          }
+        } else if (data.Status !== 1) {
+          setIrnEwbError(data.ErrorDetails?.[0]?.ErrorMessage || `IRN/E-Way Bill generation failed with Status: ${data.Status}`);
+        }
+      } catch (jsonError) {
+        setIrnEwbError(`Failed to parse API response as JSON: ${jsonError.message}. Raw Response: "${rawResponseText.substring(0, 200)}..."`);
+      }
+    } catch (err) {
+      setIrnEwbError(`IRN/E-Way Bill API Request Failed: ${err.message}.`);
+      console.error("API Request Error:", err);
+    } finally {
+      setIrnEwbLoading(false);
+    }
+  }, [irnEwbEncryptedPayload, authToken, clientId, clientSecret, gstin, username, decryptApiResponse]);
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -523,6 +580,11 @@ const [username, setUsername] = useState('');
           {irnEwbError}
         </Alert>
       )}
+      {decryptionError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {decryptionError}
+        </Alert>
+      )}
 
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" gutterBottom>
@@ -533,6 +595,7 @@ const [username, setUsername] = useState('');
           Enter details for the e-invoice and e-way bill. Fields are pre-filled with provided JSON data.
         </Alert>
 
+        {/* Transaction Details */}
         <Accordion defaultExpanded sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Transaction Details</Typography>
@@ -548,6 +611,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Document Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Document Details</Typography>
@@ -561,6 +625,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Seller Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Seller Details</Typography>
@@ -581,6 +646,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Buyer Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Buyer Details</Typography>
@@ -602,6 +668,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Dispatch Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Dispatch Details</Typography>
@@ -618,6 +685,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Shipping Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Shipping Details</Typography>
@@ -636,6 +704,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Item Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Item Details (Single Item)</Typography>
@@ -679,6 +748,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Value Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Value Details</Typography>
@@ -700,6 +770,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Payment Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Payment Details</Typography>
@@ -721,6 +792,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Reference Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Reference Details</Typography>
@@ -745,6 +817,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Additional Document Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Additional Document Details</Typography>
@@ -758,6 +831,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Export Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Export Details</Typography>
@@ -775,6 +849,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* E-Way Bill Details */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">E-Way Bill Details</Typography>
@@ -793,6 +868,7 @@ const [username, setUsername] = useState('');
           </AccordionDetails>
         </Accordion>
 
+        {/* Authentication Tokens */}
         <Accordion sx={{ mb: 2 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">Authentication Tokens</Typography>
@@ -866,34 +942,41 @@ const [username, setUsername] = useState('');
         </Box>
       </Paper>
 
-      {irnEwbApiResponse && (
+      {(irnEwbApiResponse || decryptedApiResponse) && (
         <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
           <Typography variant="h5" gutterBottom>
             Phase 4: IRN & E-Way Bill API Response
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#e8f5e9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-            {typeof irnEwbApiResponse === 'string' ? irnEwbApiResponse : JSON.stringify(irnEwbApiResponse, null, 2)}
-          </Paper>
-          {irnEwbApiResponse.Status === "ACT" ? (
+          {irnEwbApiResponse && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1">Raw API Response:</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#e8f5e9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                {typeof irnEwbApiResponse === 'string' ? irnEwbApiResponse : JSON.stringify(irnEwbApiResponse, null, 2)}
+              </Paper>
+            </Box>
+          )}
+          {decryptedApiResponse && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1">Decrypted API Response Data:</Typography>
+              <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#e8f5e9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                {typeof decryptedApiResponse === 'string' ? decryptedApiResponse : JSON.stringify(decryptedApiResponse, null, 2)}
+              </Paper>
+            </Box>
+          )}
+          {irnEwbApiResponse?.Status === 1 ? (
             <Alert severity="success" sx={{ mt: 2 }}>
               IRN & E-Way Bill Generated Successfully!<br />
-              Ack No: {irnEwbApiResponse.AckNo}<br />
-              Ack Date: {irnEwbApiResponse.AckDt}<br />
-              IRN: {irnEwbApiResponse.Irn}<br />
-              EWB No: {irnEwbApiResponse.EwbNo}<br />
-              EWB Date: {irnEwbApiResponse.EwbDt}<br />
-              EWB Validity: {irnEwbApiResponse.EwbValidTill}<br />
-              Signed Invoice: <Typography component="span" sx={{ wordBreak: 'break-all', fontSize: '0.85em' }}>{irnEwbApiResponse.SignedInvoice}</Typography><br />
-              Signed QR Code: <Typography component="span" sx={{ wordBreak: 'break-all', fontSize: '0.85em' }}>{irnEwbApiResponse.SignedQRCode}</Typography><br />
-              Remarks: {irnEwbApiResponse.Remarks || 'N/A'}
+              Status: {irnEwbApiResponse.Status}<br />
+              Error Details: {irnEwbApiResponse.ErrorDetails ? JSON.stringify(irnEwbApiResponse.ErrorDetails) : 'None'}<br />
+              Info Details: {irnEwbApiResponse.InfoDtls ? JSON.stringify(irnEwbApiResponse.InfoDtls) : 'None'}
             </Alert>
           ) : (
             <Alert severity="warning" sx={{ mt: 2 }}>
               IRN & E-Way Bill Generation Failed:<br />
-              Code: {irnEwbApiResponse?.ErrorDetails?.[0]?.ErrorCode || 'N/A'}<br />
-              Message: {irnEwbApiResponse?.ErrorDetails?.[0]?.ErrorMessage || 'N/A'}<br />
-              Info: {irnEwbApiResponse?.ErrorDetails?.[0]?.InfoDtls || 'N/A'}
+              Status: {irnEwbApiResponse?.Status || 'N/A'}<br />
+              Error Details: {irnEwbApiResponse?.ErrorDetails?.[0]?.ErrorMessage || 'N/A'}<br />
+              Info Details: {irnEwbApiResponse?.InfoDtls || 'N/A'}
             </Alert>
           )}
         </Paper>

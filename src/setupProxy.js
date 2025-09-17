@@ -1,19 +1,16 @@
+// src/setupProxy.js
 const { createProxyMiddleware } = require('http-proxy-middleware');
-//const app = express();
+
 module.exports = function(app) {
   app.use(
-    '/eicore',
+    '/eicore', // This is the path prefix that will trigger the proxy
     createProxyMiddleware({
-      target: 'https://api.sandbox.core.irisirp.com',
-      changeOrigin: true,
+      target: 'https://api.sandbox.core.irisirp.com', // The base URL of your API
+      changeOrigin: true, // Needed for virtual hosted sites
+      secure: false, // Set to true for production, false if you have self-signed certs or issues with sandbox
       pathRewrite: {
-        '^/eicore': '/', // Retain /eicore in path!
+        '^/eicore': '', // Rewrite the path if needed, here it's a direct match
       },
-      logLevel: 'debug',
     })
   );
 };
-// Import proxy setup
-//require('./setproxy')(app);
-
-//app.listen(3000, () => console.log('Server running on port 3000'));
