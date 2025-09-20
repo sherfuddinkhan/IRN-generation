@@ -19,6 +19,7 @@
     "http-proxy-middleware": "^3.0.5",
     "jsencrypt": "^3.3.2",
     "jsrsasign": "^11.1.0",
+    "node-fetch": "^3.3.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-scripts": "5.0.1",
