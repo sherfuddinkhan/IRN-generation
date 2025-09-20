@@ -100,7 +100,7 @@ const EInvoiceAuth = ({ setAuthToken, setDecryptedSek, setClientId, setClientSec
   const [trimmedReceivedSek, setTrimmedReceivedSek] = useState('');
   const [keyWordArrayHex, setKeyWordArrayHex] = useState('');
   const [receivedSekHex, setReceivedSekHex] = useState('');
-
+  const [irnData, setirnData] = useState(null);
   // Update parent state when authentication is successful
   useEffect(() => {
     if (apiResponse && apiResponse.Status === 1 && apiResponse.Data?.AuthToken && decryptedSekBase64) {
@@ -1119,51 +1119,57 @@ const IRNEWayBillGenerator = () => {
   }, [irnEwbEncryptedPayload, authToken, clientId, clientSecret, gstin, username]);
 
   const decryptPayload = useCallback((encryptedData) => {
-    if (!isCryptoJSLoaded || !cryptoJsRef.current || !encryptedData || !decryptedSek) {
-      setDecryptionError('Decryption library or required data missing.');
-      return null;
-    }
-    try {
-      const crypto = cryptoJsRef.current;
-      const aesKey = crypto.enc.Base64.parse(decryptedSek);
-      const decrypted = crypto.AES.decrypt(encryptedData, aesKey, {
-        mode: crypto.mode.ECB,
-        padding: crypto.pad.Pkcs7, 
-      }).toString(crypto.enc.Utf8);
-      if (!decrypted) throw new Error('AES decryption failed.');
-      let decryptedData = JSON.parse(decrypted);
-      if (decryptedData.SignedInvoice) setInvoiceJwt(decryptedData.SignedInvoice);
-      if (decryptedData.SignedQRCode) setQrcodeJwt(decryptedData.SignedQRCode);
-      
-      setCurrentMode('decoder');
-      const invoiceData = decryptedData.SignedInvoice ? decodeJwt(decryptedData.SignedInvoice) : null;
-      const qrcodeData = decryptedData.SignedQRCode ? decodeJwt(decryptedData.SignedQRCode) : null;
-      const irn = decodedQrCodeData ? decodedQrCodeData.Irn : null;
-      setError(
-        [
-          !invoiceData && decryptedData.SignedInvoice ? 'Failed to decode Signed Invoice JWT.' : '',
-          !qrcodeData && decryptedData.SignedQRCode ? 'Failed to decode Signed QR Code JWT.' : '',
-          !irn && decodedQrCodeData.Irn ? 'Failed to decode irn.' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')
-      );
-      setDecodedInvoiceData(invoiceData);
-      setDecodedQrCodeData(qrcodeData);
-      setirnData(irn);
-      return JSON.stringify(decryptedData, null, 2);
-    } catch (err) {
-      setDecryptionError(`Error decrypting payload: ${err.message}.`);
-      return null;
-    }
-  }, [isCryptoJSLoaded, decryptedSek]);
+  if (!isCryptoJSLoaded || !cryptoJsRef.current || !encryptedData || !decryptedSek) {
+    setDecryptionError('Decryption library or required data missing.');
+    return null;
+  }
+  try {
+    const crypto = cryptoJsRef.current;
+    const aesKey = crypto.enc.Base64.parse(decryptedSek);
+    const decrypted = crypto.AES.decrypt(encryptedData, aesKey, {
+      mode: crypto.mode.ECB,
+      padding: crypto.pad.Pkcs7,
+    }).toString(crypto.enc.Utf8);
+    if (!decrypted) throw new Error('AES decryption failed.');
+    let decryptedData = JSON.parse(decrypted);
+    if (decryptedData.SignedInvoice) setInvoiceJwt(decryptedData.SignedInvoice);
+    if (decryptedData.SignedQRCode) setQrcodeJwt(decryptedData.SignedQRCode);
+    
+    setCurrentMode('decoder');
+    const invoiceData = decryptedData.SignedInvoice ? decodeJwt(decryptedData.SignedInvoice) : null;
+    const qrcodeData = decryptedData.SignedQRCode ? decodeJwt(decryptedData.SignedQRCode) : null;
+    const irn = qrcodeData ? qrcodeData.Irn : null;
+    setError(
+      [
+        !invoiceData && decryptedData.SignedInvoice ? 'Failed to decode Signed Invoice JWT.' : '',
+        !qrcodeData && decryptedData.SignedQRCode ? 'Failed to decode Signed QR Code JWT.' : '',
+        !irn && qrcodeData && qrcodeData.Irn ? 'Failed to decode irn.' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    );
+    setDecodedInvoiceData(invoiceData);
+    setDecodedQrCodeData(qrcodeData);
+    setIrn(irn); // Set the irn state
+    setirnData(irn); // Synchronize irnData with irn
+    return JSON.stringify(decryptedData, null, 2);
+  } catch (err) {
+    setDecryptionError(`Error decrypting payload: ${err.message}.`);
+    return null;
+  }
+}, [isCryptoJSLoaded, decryptedSek]);
 
 useEffect(() => {
   if (currentMode === 'decoder' && decodedQrCodeData && qrcodeJwt) {
     generateQRCode('qrcode-container', qrcodeJwt);
-  } else if (currentMode === 'decoder') {
+  } else if (currentMode === 'decoder'&& decodedQrCodeData?.Irn) {
     generateQRCode('qrcode-container', null);
-  } else if (currentMode === 'template') {
+    setIrn(decodedQrCodeData.Irn);
+    setirnData(decodedQrCodeData.Irn);
+  }else if (currentMode === 'ewaybill') {
+    setirnData(decodedQrCodeData.Irn);
+  }
+else if (currentMode === 'template') {
     generateQRCode('template-qrcode-container', {
       SellerGstin: '36AALCC6633K005',
       BuyerGstin: 'URP',
