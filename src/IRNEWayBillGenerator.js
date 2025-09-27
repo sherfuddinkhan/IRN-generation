@@ -683,6 +683,20 @@ const IRNEWayBillGenerator = () => {
       const [ewbNo, setEwbNo] = useState('');
       const [decryptionError5, setDecryptionError5] = useState(null);
       const [loading5, setLoading5] = useState(false);
+
+       // Consolidated State for API/Decryption flow
+       const [loading7, setLoading7] = useState(false);
+       const [error7, setError7] = useState(null);
+       const [decryptionError7, setDecryptionError7] = useState(null);
+       const [response7, setResponse7] = useState(null); // Decrypted/Parsed JSON response
+     
+       const [apiResponsePayload7, setApiResponsePayload7] = useState(''); // Encrypted Data field from API
+       const [decryptedApiResponse7, setDecryptedApiResponse7] = useState(''); // Decrypted raw string/JSON string
+     
+       // Ref and Effect for CryptoJS availability
+       const cryptoJsRef7 = useRef(CryptoJS);
+       const [isCryptoJSLoaded7, setIsCryptoJSLoaded7] = useState(false);
+
   const EWB_API_URL = '/eiewb/v1.03/ewaybill';
 
   useEffect(() => {
@@ -1321,171 +1335,201 @@ const IRNEWayBillGenerator = () => {
     }
   }, [currentMode, decodedQrCodeData, qrcodeJwt, irn]);
 //
-const base64ToArrayBuffer = (base64) => {
-  const binaryString = Buffer.from(base64, 'base64').toString('binary');
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-};
-
-const convertWordArrayToHex = (wordArray) => {
-  return CryptoJS.enc.Hex.stringify(wordArray);
-};
-
-// Decrypt API response data
-const decryptResponse = useCallback((encryptedData, secretKey, cryptoJsRef) => {
-  try {
-    if (!cryptoJsRef.current || !secretKey || !encryptedData) {
-      throw new Error('Decryption library, key, or data missing.');
-    }
-    const crypto = cryptoJsRef.current;
-
-    // Validate base64 format
-    if (!/^[A-Za-z0-9+/=]+$/.test(secretKey) || !/^[A-Za-z0-9+/=]+$/.test(encryptedData)) {
-      throw new Error('Invalid base64 format for secret key or encrypted data.');
-    }
-
-    // Validate key and data lengths
-    const secretKeyBuffer = base64ToArrayBuffer(secretKey);
-    if (secretKeyBuffer.byteLength !== 32) {
-      throw new Error(`Secret key must be 32 bytes (256 bits). Got ${secretKeyBuffer.byteLength} bytes.`);
-    }
-    const encryptedDataBuffer = base64ToArrayBuffer(encryptedData);
-    if (encryptedDataBuffer.byteLength === 0 || encryptedDataBuffer.byteLength % 16 !== 0) {
-      throw new Error(`Encrypted data length (${encryptedDataBuffer.byteLength} bytes) must be a non-zero multiple of 16 for AES-ECB decryption.`);
-    }
-
-    const aesKey = crypto.enc.Base64.parse(secretKey);
-    const payloadWordArray = crypto.enc.Base64.parse(encryptedData);
-
-    const decrypted = crypto.AES.decrypt(
-      { ciphertext: payloadWordArray },
-      aesKey,
-      {
-        mode: crypto.mode.ECB,
-        padding: crypto.pad.Pkcs7,
-      }
-    );
-    const decryptedText = decrypted.toString(crypto.enc.Utf8);
-    if (!decryptedText) {
-      throw new Error('Decryption resulted in an empty or invalid string.');
-    }
-
-    try {
-      const parsedJson = JSON.parse(decryptedText);
-      return { data: parsedJson, hex: convertWordArrayToHex(decrypted), raw: decryptedText };
-    } catch (jsonError) {
-      console.error('Decrypted data is not JSON:', decryptedText, jsonError);
-      return {
-        error: 'Decrypted data is not valid JSON.',
-        rawData: decryptedText,
-        hex: convertWordArrayToHex(decrypted),
-      };
-    }
-  } catch (err) {
-    console.error('Decryption Error:', err);
-    return { error: `Decryption failed: ${err.message}` };
-  }
-}, [base64ToArrayBuffer, convertWordArrayToHex]);
-
-
-// Handle IRN details submission
-const handleSubmit2 = useCallback(
-  async (e) => {
-    e.preventDefault();
-    setLoading2(true);
-    setError2(null);
-    setResponse2(null);
-
-    if (!clientId || !clientSecret || !gstin || !username || !authToken || !decryptedSek) {
-      setError('Please provide all required fields, including the SEK.');
-      setLoading(false);
-      return;
-    }
-
-   // Construct URL with query parameters
-    const baseUrl = '/eicore/v1.03/Invoice/irnbydocdetails';
-    const queryParams = new URLSearchParams({
-      doctype: docType,
-      docnum: docNum,
-      docdate: docDate,
-    });
-    const url = `${baseUrl}?${queryParams.toString()}`;
-     console.log('Constructed URL:', url);
-     console.log('Document Details:', {
-      doctype: docType,
-      docnum: docNum,
-      docdate: docDate,
-    });
-    const headers = {
-      client_id: clientId,
-      client_secret: clientSecret,
-      Gstin: gstin,
-      sup_gstin: supGstin || undefined,
-      irp: irp || undefined,
-      user_name: username,
-      AuthToken: authToken,
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: headers,
-      });
-
-      const data = await res.json();
-
-      if (data.Status === '1' && data.Data) {
-        const decryptedData = decryptResponse(data.Data, decryptedSek, cryptoJsRef);
-        if (decryptedData.error) {
-          setError2(`Decryption Error: ${decryptedData.error}${decryptedData.rawData ? ` Raw data: ${decryptedData.rawData}` : ''}`);
-        } else {
-          setResponse2({
-            AckNo: decryptedData.data.AckNo,
-            AckDt: decryptedData.data.AckDt,
-            Irn: decryptedData.data.Irn,
-            SignedInvoice: decryptedData.data.SignedInvoice,
-            SignedQRCode: decryptedData.data.SignedQRCode,
-            Status: decryptedData.data.Status,
-            EwbNo: decryptedData.data.EwbNo,
-            EwbDt: decryptedData.data.EwbDt,
-            EwbValidTill: decryptedData.data.EwbValidTill,
-            Remarks: decryptedData.data.Remarks,
-            raw: decryptedData.raw,
-            hex: decryptedData.hex,
-          });
-        }
-      } else if (data.Status === '0') {
-        let errorMessage = 'Unknown error';
-        if (data.ErrorDetails) {
-          try {
-            const errorDetails = JSON.parse(data.ErrorDetails);
-            errorMessage = `Code ${errorDetails[0]?.ErrorCode || 'Unknown'}, Message: ${errorDetails[0]?.ErrorMessage || 'Unknown'}${data.InfoDtls ? `, Info: ${data.InfoDtls}` : ''}`;
-          } catch (parseError) {
-            errorMessage = `ErrorDetails: ${data.ErrorDetails}${data.InfoDtls ? `, Info: ${data.InfoDtls}` : ''}`;
+        useEffect(() => {
+          // Check if CryptoJS is available after the initial render
+          if (cryptoJsRef7.current) {
+            setIsCryptoJSLoaded7(true);
           }
-        } else {
-          errorMessage = data.InfoDtls || 'No error details provided.';
-        }
-        setError2(`API Error: ${errorMessage}`);
-      } else {
-        setError2('Unexpected API response format.');
-      }
-    } catch (err) {
-      setError2(`Failed to retrieve IRN details. Error: ${err.message}`);
-    } finally {
-      setLoading2(false);
-    }
-  },
-  [decryptResponse, base64ToArrayBuffer, convertWordArrayToHex]
-);
+        }, []);
+      
+        // Form validation check
+        const isFormValid7 = clientId && clientSecret && gstin && username && authToken && decryptedSek && docType && docNum && docDate;
+      
+        // --- Decryption Handler ---
+        const handleDecryptApiResponse7 = useCallback(() => {
+          if (!isCryptoJSLoaded7 || !cryptoJsRef7.current) {
+            setDecryptionError7('Encryption library not loaded.');
+            return;
+          }
+          if (!apiResponsePayload7 || !decryptedSek) {
+            setDecryptionError7('API payload and SEK are required.');
+            return;
+          }
+          if (decryptedSek.length !== 44 || !/^[A-Za-z0-9+/=]+$/.test(decryptedSek)) {
+            setDecryptionError7('SEK must be a 44-character Base64 string.');
+            return;
+          }
+      
+          try {
+            const crypto = cryptoJsRef7.current;
+            const aesKey = crypto.enc.Base64.parse(decryptedSek);
+      
+            // The API response payload is the ciphertext
+            const payloadWordArray = crypto.enc.Base64.parse(apiResponsePayload7);
+      
+            // Decrypt using ECB mode without an IV
+            const decrypted = crypto.AES.decrypt(
+              { ciphertext: payloadWordArray },
+              aesKey,
+              {
+                mode: crypto.mode.ECB,
+                padding: crypto.pad.Pkcs7,
+              }
+            );
+      
+            const decryptedText = decrypted.toString(crypto.enc.Utf8);
+            
+            if (!decryptedText) {
+               throw new Error('Decryption resulted in empty data.');
+            }
+      
+            try {
+              // Attempt to parse the decrypted text as JSON
+              const parsedJson = JSON.parse(decryptedText);
+              setDecryptedApiResponse7(JSON.stringify(parsedJson, null, 2));
+              setResponse7(parsedJson); // Set response state for display
+            } catch (e) {
+              // Fallback to displaying the raw decrypted text if it's not valid JSON
+              setDecryptedApiResponse7(decryptedText);
+              setResponse7(null); // Clear response state
+              console.error('Decrypted data is not valid JSON:', decryptedText);
+            }
+            setDecryptionError7(null);
+          } catch (err) {
+            setDecryptionError7(`Decryption failed: ${err.message}`);
+            setResponse7(null);
+          }
+        }, [apiResponsePayload7, decryptedSek, isCryptoJSLoaded7]);
+      
+      // Configuration
+// Using the proxy URL for the API call
+const PROXY_URL = 'http://localhost:3000/api/proxy';
+const TARGET_API_DOMAIN = 'https://api.sandbox.core.irisirp.com';
+const TARGET_API_PATH = '/eicore/v1.03/Invoice/irnbydocdetails';
+      
+      
+        // --- API Submission Handler (FIXED ERROR HANDLING HERE) ---
+    const handleSubmit7 = useCallback(async (e) => {
+        e.preventDefault();
 
-  // Ref for CryptoJS instance
-  const cryptoJsRef3 = useRef(CryptoJS);
+        if (!isFormValid7) {
+            setError7('Please provide all required fields.');
+            return;
+        }
+
+        setLoading7(true);
+        setError7(null);
+        setDecryptionError7(null);
+        setResponse7(null);
+        setApiResponsePayload7('');
+        setDecryptedApiResponse7('');
+
+        // Prepare URL and Headers for the specific API endpoint
+        const queryParams = new URLSearchParams({
+            doctype: docType,
+            docnum: docNum,
+            docdate: docDate,
+        });
+        const finalTargetUrl = `${TARGET_API_DOMAIN}${TARGET_API_PATH}?${queryParams.toString()}`;
+
+        const headers = {
+            client_id: clientId,
+            client_secret: clientSecret,
+            Gstin: gstin,
+            ...(supGstin && { sup_gstin: supGstin }),
+            ...(irp && { irp: irp }),
+            user_name: username,
+            AuthToken: authToken,
+        };
+     // 2. LOGGING STEP: Check the headers being prepared for the proxy body
+console.log('Final Headers being sent in proxy body:', headers); 
+console.log('Target URL for proxy to use:', finalTargetUrl);
+
+        try {
+            // NOTE: Using a POST request to your proxy to securely send headers
+            const apiResponse = await fetch(PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    targetUrl: finalTargetUrl,
+                    headers: headers,
+                    method: 'GET', // Informing the proxy the final method is GET
+                }),
+            });
+
+            const data = await apiResponse.json();
+            console.log('API Response:', data);
+
+            if (data.Status === 1 && data.Data) {
+                setApiResponsePayload7(data.Data);
+                // Do not auto-decrypt here, rely on the button click
+            } else if (data.Status === 0 && data.ErrorDetails) {
+                
+                let errorDetailsString;
+                
+                // 1. Check if ErrorDetails is a string (potential Base64 encoding)
+                if (typeof data.ErrorDetails === 'string') {
+                    try {
+                        // Robust Browser-Native Base64 Decoding (handles Unicode)
+                        // This handles the Base64 case where the error is encrypted
+                        const binaryString = atob(data.ErrorDetails);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        errorDetailsString = new TextDecoder('utf-8').decode(bytes);
+                    } catch (decodeError) {
+                        // If Base64 decoding fails, treat the original string as raw text
+                        console.error("Base64 decoding failed, treating as raw string:", decodeError);
+                        errorDetailsString = data.ErrorDetails; 
+                    }
+                } else if (typeof data.ErrorDetails === 'object' && data.ErrorDetails !== null) {
+                    // 2. Check if ErrorDetails is already a JSON object/array (the case in your screenshot)
+                    // Stringify it to display properly
+                    errorDetailsString = JSON.stringify(data.ErrorDetails);
+                } else {
+                    // 3. Fallback for unexpected data types
+                    errorDetailsString = String(data.ErrorDetails);
+                }
+
+                // --- Attempt to Parse and Display Error ---
+                try {
+                    // Try to parse the resulting string (which might be raw JSON or Base64 decoded JSON)
+                    const errors = JSON.parse(errorDetailsString);
+
+                    // Check if the parsed errors object is an array of messages (as shown in your screenshot)
+                    if (Array.isArray(errors)) {
+                        setError7(errors.map(err => {
+                            // Format the standard error structure
+                            if (err && err.ErrorCode && err.ErrorMessage) {
+                                return `Code: ${err.ErrorCode}, Message: ${err.ErrorMessage}`;
+                            }
+                            // Fallback for unexpected array item structure
+                            return JSON.stringify(err);
+                        }).join(' | '));
+                    } else if (errors && typeof errors === 'object' && (errors.ErrorCode || errors.ErrorMessage)) {
+                        // Handle single object error
+                        setError7(`Code: ${errors.ErrorCode || 'N/A'}, Message: ${errors.ErrorMessage || JSON.stringify(errors)}`);
+                    } else {
+                        // Display the entire structured object if it's not a standard error format
+                        setError7(`Error Details: ${JSON.stringify(errors, null, 2)}`);
+                    }
+                } catch (parseError) {
+                    // Fallback if JSON parsing fails (i.e., it was a plain, non-JSON error string)
+                    setError7(errorDetailsString);
+                }
+            } else {
+                // Handle status 0 with no ErrorDetails, or other unexpected status codes
+                setError7(data.message || `Unexpected response. Status: ${data.Status || apiResponse.status}`);
+            }
+        } catch (err) {
+            setError7(`API Request Failed: ${err.message}. Check your proxy server.`);
+        } finally {
+            setLoading7(false);
+        }
+    }, [clientId, clientSecret, gstin, supGstin, irp, username, authToken, docType, docNum, docDate, isFormValid7]);
 
   // Construct the cancellation payload
   const constructCancelPayload = useCallback(() => {
@@ -1505,7 +1549,7 @@ const handleSubmit2 = useCallback(
       return null;
     }
   }, [irn, cancelReason, cancelRemark]);
-
+ const cryptoJsRef3 = useRef(CryptoJS);
   // Encrypt the cancellation payload
   const encryptCancelPayload = useCallback(() => {
     if (!cryptoJsRef3.current || !decryptedSek) {
@@ -2491,124 +2535,175 @@ const handleSubmit2 = useCallback(
         </>
     );
       case 'getIrnDetails': 
-    return (
-        <>
-            <Typography variant="h4" gutterBottom align="center">Get IRN Details by Document</Typography>
-            <Typography variant="subtitle1" color="text.secondary" align="center" sx={{ mb: 4 }}>
-                Retrieve Invoice Reference Number (IRN) details using document attributes.
-            </Typography>
+     return (
+  <Box className="GetIrnDetailsByDocContainer" sx={{ maxWidth: 900, mx: 'auto', p: 2 }}>
+    <Typography variant="h4" gutterBottom align="center">
+      Get IRN Details by Document
+    </Typography>
+    <Typography variant="subtitle1" color="text.secondary" align="center" sx={{ mb: 4 }}>
+      Proxy URL: <strong>{PROXY_URL}</strong>
+    </Typography>
 
-            {/* Error Display */}
-            {error2 && <Alert severity="error" sx={{ mb: 2 }}>{error2}</Alert>}
+    {/* Error Display */}
+    {error7 && <Alert severity="error" sx={{ mb: 2 }}>API Error: {error7}</Alert>}
+    {decryptionError7 && <Alert severity="warning" sx={{ mb: 2 }}>Decryption Error: {decryptionError7}</Alert>}
 
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h5" gutterBottom>IRN Retrieval Parameters</Typography>
-                <Box component="form" onSubmit={handleSubmit2}>
-                    {/* Credentials Section */}
-                    <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>Authentication</Typography>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="Client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="Client Secret" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="GSTIN (Requestor)" value={gstin} onChange={(e) => setGstin(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="User Name" value={username} onChange={(e) => setUsername(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="Auth Token" value={authToken} onChange={(e) => setAuthToken(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="Decrypted SEK" value={decryptedSek} onChange={(e) => setDecryptedSek(e.target.value)} fullWidth required helperText="The Session Encryption Key (Base64)" />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="Supplier GSTIN (Optional)" value={supGstin} onChange={(e) => setSupGstin(e.target.value)} fullWidth />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField label="IRP (Optional)" value={irp} onChange={(e) => setIrp(e.target.value)} fullWidth />
-                        </Grid>
-                    </Grid>
+    <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+      <Typography variant="h5" gutterBottom>IRN Retrieval Parameters</Typography>
 
-                    {/* Document Details Section */}
-                    <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Document Details</Typography>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={4}>
-                            <TextField label="Document Type" value={docType} onChange={(e) => setDocType(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <TextField label="Document Number" value={docNum} onChange={(e) => setDocNum(e.target.value)} fullWidth required />
-                        </Grid>
-                        <Grid item xs={12} sm={4}>
-                            <TextField label="Document Date (YYYY-MM-DD)" value={docDate} onChange={(e) => setDocDate(e.target.value)} fullWidth required />
-                        </Grid>
-                    </Grid>
+      <Box component="form" onSubmit={handleSubmit7}>
+        {/* Authentication & Document Details (Mapping ALL inputs) */}
+        <Grid container spacing={3}>
+          {/* Row 1: Credentials */}
+          <Grid item xs={12} sm={6}>
+            <TextField label="Client ID" value={clientId} onChange={(e) => setClientId(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Client Secret" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="GSTIN (Requestor)" value={gstin} onChange={(e) => setGstin(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="User Name" value={username} onChange={(e) => setUsername(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Auth Token" value={authToken} onChange={(e) => setAuthToken(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {/* NOTE: Assuming 'sek' from your original code maps to a required input */}
+            <TextField label="SEK (Base64)" value={decryptedSek} onChange={(e) => setDecryptedSek(e.target.value)} fullWidth required helperText="Session Encryption Key" />
+          </Grid>
+          
+          {/* Row 2: Optional/Document */}
+          <Grid item xs={12} sm={4}>
+            <TextField label="Supplier GSTIN (Optional)" value={supGstin} onChange={(e) => setSupGstin(e.target.value)} fullWidth />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField label="IRP (Optional: NIC1/NIC2)" value={irp} onChange={(e) => setIrp(e.target.value)} fullWidth />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField label="Document Type (INV, CRN)" value={docType} onChange={(e) => setDocType(e.target.value)} fullWidth required />
+          </Grid>
 
-                    {/* Submit Button */}
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        disabled={loading2}
-                        sx={{ mt: 3 }}
-                        fullWidth
-                    >
-                        {loading2 ? <CircularProgress size={24} /> : 'Get IRN Details'}
-                    </Button>
-                </Box>
-            </Paper>
+          {/* Row 3: Document Details */}
+          <Grid item xs={12} sm={6}>
+            <TextField label="Document Number" value={docNum} onChange={(e) => setDocNum(e.target.value)} fullWidth required />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Document Date (yyyy-mm-dd)" value={docDate} onChange={(e) => setDocDate(e.target.value)} fullWidth required />
+          </Grid>
+        </Grid>
 
-            {/* Response Display */}
-            {response2 && (
-                <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-                    <Typography variant="h5" gutterBottom>API Response</Typography>
-                    <Paper variant="outlined" sx={{ p: 2, backgroundColor: '#e8f5e9', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-                        {JSON.stringify(response2, null, 2)}
-                    </Paper>
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={loading7}
+          sx={{ mt: 3 }}
+          fullWidth
+        >
+          {loading7 ? <CircularProgress size={24} color="inherit" /> : 'Get IRN Details'}
+        </Button>
+      </Box>
+    </Paper>
 
-                    {/* Rendered Individual Fields from Response (Optional) */}
-                    {response2.Irn && (
-                        <>
-                            <Divider sx={{ mt: 3, mb: 2 }} />
-                            <Typography variant="h6" sx={{ mb: 1 }}>Key IRN Data</Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField label="IRN" value={response2.Irn || ''} fullWidth InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField label="Status" value={response2.Status || ''} fullWidth InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField label="Acknowledgement No" value={response2.AckNo || ''} fullWidth InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField label="Acknowledgement Date" value={response2.AckDt || ''} fullWidth InputProps={{ readOnly: true }} />
-                                </Grid>
-                                {response2.EwbNo && (
-                                    <Grid item xs={12} sm={4}>
-                                        <TextField label="E-Way Bill No" value={response2.EwbNo || ''} fullWidth InputProps={{ readOnly: true }} />
-                                    </Grid>
-                                )}
-                                {response2.EwbDt && (
-                                    <Grid item xs={12} sm={4}>
-                                        <TextField label="E-Way Bill Date" value={response2.EwbDt || ''} fullWidth InputProps={{ readOnly: true }} />
-                                    </Grid>
-                                )}
-                                {response2.EwbValidTill && (
-                                    <Grid item xs={12} sm={4}>
-                                        <TextField label="E-Way Bill Valid Till" value={response2.EwbValidTill || ''} fullWidth InputProps={{ readOnly: true }} />
-                                    </Grid>
-                                )}
-                            </Grid>
-                        </>
-                    )}
-                </Paper>
-            )}
-        </>
-    );
+    {/* --- Encrypted Response Display and Decryption Button --- */}
+    {apiResponsePayload7 && (
+      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#f0f4c3' }}>
+        <Typography variant="h6" gutterBottom>API Response Payload (Encrypted)</Typography>
+        <TextField
+          multiline
+          fullWidth
+          variant="outlined"
+          value={apiResponsePayload7}
+          InputProps={{ readOnly: true }}
+          minRows={5}
+          sx={{ '& textarea': { fontFamily: 'monospace', fontSize: 12, backgroundColor: 'white' } }}
+        />
+        <Button
+          onClick={handleDecryptApiResponse7}
+          variant="contained"
+          color="success"
+          sx={{ mt: 2 }}
+          fullWidth
+        >
+          Decrypt Response
+        </Button>
+      </Paper>
+    )}
+
+    {/* --- Decrypted Response Display --- */}
+    {decryptedApiResponse7 && (
+      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#e8f5e9' }}>
+        <Typography variant="h6" gutterBottom>Decrypted API Response</Typography>
+        <Box 
+          sx={{ 
+            p: 2, 
+            border: '1px solid #ccc', 
+            borderRadius: 1, 
+            whiteSpace: 'pre-wrap', 
+            fontFamily: 'monospace', 
+            fontSize: 12,
+            backgroundColor: 'white'
+          }}
+        >
+          {decryptedApiResponse7}
+        </Box>
+      </Paper>
+    )}
+
+    {/* --- Extracted IRN Data Display (Using response7 for final data) --- */}
+    {response7 && response7.Status === 1 && response7.Data && (
+      <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: '#e3f2fd' }}>
+        <Typography variant="h6" gutterBottom color="primary">Key IRN Data Extracted</Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Acknowledgement No" value={response7.Data.AckNo || ''} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Acknowledgement Date" value={response7.Data.AckDt || ''} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="IRN" value={response7.Data.Irn || ''} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField label="Status" value={response7.Data.Status || ''} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          {response7.Data.EwbNo && (
+            <Grid item xs={12} sm={6}>
+              <TextField label="E-Way Bill No" value={response7.Data.EwbNo || ''} fullWidth InputProps={{ readOnly: true }} />
+            </Grid>
+          )}
+          {response7.Data.SignedInvoice && (
+            <Grid item xs={12}>
+              <TextField 
+                label="Signed Invoice (Base64)" 
+                value={response7.Data.SignedInvoice || ''} 
+                fullWidth multiline 
+                rows={3} 
+                InputProps={{ readOnly: true, sx: { fontSize: 12, fontFamily: 'monospace' } }} 
+              />
+            </Grid>
+          )}
+          {response7.Data.SignedQRCode && (
+            <Grid item xs={12}>
+              <TextField 
+                label="Signed QR Code (Base64)" 
+                value={response7.Data.SignedQRCode || ''} 
+                fullWidth 
+                multiline 
+                rows={3} 
+                InputProps={{ readOnly: true, sx: { fontSize: 12, fontFamily: 'monospace' } }} 
+              />
+            </Grid>
+          )}
+        </Grid>
+      </Paper>
+    )}
+  </Box>
+);
       case 'Cancelirn':
     return (
         <>
